@@ -1,0 +1,16 @@
+[commit]
+	gpgsign = true
+[core]
+	excludesfile = ~/.gitignore_global
+[difftool]
+	cmd = code-insiders --wait --diff $LOCAL $REMOTE
+[mergetool]
+	cmd = code-insiders --wait $MERGED
+[pull]
+	ff = only
+[rebase]
+	autosquash = true
+[user]
+	name = Robert Zablit
+	email = rzablit@gmail.com
+	signingkey = D9BB5EF012977497
