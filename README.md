@@ -14,6 +14,5 @@
 
 ```sh
 git clone git@github.com:zabrador/dotfiles.git ~/.dotfiles
-cd ~/.dotfiles
-stow shell
+sh .dotfiles/install.sh
 ```
