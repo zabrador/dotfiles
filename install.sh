@@ -2,6 +2,7 @@ echo "Installing dotfiles..."
 
 if type "brew" > /dev/null; then
   echo "Using brew for installation..."
+  brew update
 
   if ! type "stow" > /dev/null; then
     echo "Installing stow..."
@@ -10,6 +11,7 @@ if type "brew" > /dev/null; then
   fi
 elif type "apt" > /dev/null; then
   echo "Using apt for installation..."
+  sudo apt update
 
   if ! type "stow" > /dev/null; then
     echo "Installing stow..."
