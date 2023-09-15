@@ -15,6 +15,3 @@ if [[ -n $SSH_CONNECTION ]]; then
 else
   export EDITOR='code-insiders --wait'
 fi
-
-# java home
-. ~/.asdf/plugins/java/set-java-home.zsh
