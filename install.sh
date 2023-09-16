@@ -24,5 +24,5 @@ echo "Installing antigen..."
 git clone https://github.com/zsh-users/antigen.git ~/.antigen
 echo "...antigen installation complete!"
 
-stow shell
+stow shell --target ~/
 echo "...dotfiles installation complete!"
