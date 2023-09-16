@@ -30,4 +30,12 @@ for file in $(find shell -type f -exec basename {} \;); do
 done
 
 stow shell --target ~/
+
+if "$CODESPACES" == "true"; then
+  echo "Simplifying git config in codespaces..."
+  git config --global --remove-section commit
+  git config --global --remove-section user
+  echo "...git config simplification complete!"
+fi
+
 echo "...dotfiles installation complete!"
