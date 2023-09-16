@@ -24,5 +24,10 @@ echo "Installing antigen..."
 git clone https://github.com/zsh-users/antigen.git ~/.antigen
 echo "...antigen installation complete!"
 
+echo "Removing existing configuration files..."
+for file in $(find shell -type f -exec basename {} \;); do
+  rm -f ~/$file
+done
+
 stow shell --target ~/
 echo "...dotfiles installation complete!"
