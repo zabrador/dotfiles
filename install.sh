@@ -34,6 +34,7 @@ stow shell --target ~/
 if "$CODESPACES" == "true"; then
   echo "Simplifying git config in codespaces..."
   git config --global --remove-section commit
+  git config --global --remove-section gpg
   git config --global --remove-section user
   echo "...git config simplification complete!"
 fi
