@@ -24,6 +24,9 @@ echo "Installing antigen..."
 git clone https://github.com/zsh-users/antigen.git ~/.antigen
 echo "...antigen installation complete!"
 
+# Move to the directory containing this install script
+cd "$(dirname "$0")"
+
 echo "Removing existing configuration files..."
 for file in $(find shell -type f -exec basename {} \;); do
   rm -f ~/$file
