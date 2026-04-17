@@ -40,6 +40,19 @@ if "$CODESPACES" == "true"; then
   git config --global --remove-section gpg
   git config --global --remove-section user
   echo "...git config simplification complete!"
+elif [ -n "$SSH_PRIVATE_KEY" ]; then
+  echo "Importing SSH key from environment..."
+
+  mkdir -p ~/.ssh
+  echo "$SSH_PRIVATE_KEY" > ~/.ssh/id
+
+  # `ssh` requires the private key to only be readable by the current user
+  chmod 600 ~/.ssh/id
+
+  # Derive the public key from the private key
+  ssh-keygen -y -f ~/.ssh/id > ~/.ssh/id.pub
+
+  echo "...SSH key import complete!"
 fi
 
 echo "...dotfiles installation complete!"
