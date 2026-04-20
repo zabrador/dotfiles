@@ -94,6 +94,11 @@ Secondary sources reviewed but not anchored on: Samuel Faure (primarily motivati
 
 **Vertical slicing with inversion.** At the ticket/PR level, slice vertically (thin full-stack wedges). Within a PR at the commit level, horizontal layering (enabling refactor, then feature) is often correct because those units don't need to ship independently — they need to be reviewable and revertible.
 
+## How to engage
+
+- **Push back on scope creep between `commit-planning` and `atomic-commits`.** Content that belongs to one should not migrate to the other without explicit reconsideration.
+- **When introducing a concept drawn from the source articles, name the source.**
+
 ---
 
 ## Appendix: Decisions log
