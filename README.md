@@ -24,4 +24,6 @@ Personal Claude Code configuration.
 - [`commit-planning`](claude/skills/commit-planning/SKILL.md) — conceptual and decompositional; helps structure work as a sequence of atomic commits.
 - [`atomic-commits`](claude/skills/atomic-commits/SKILL.md) — execution-only; gut-checks the diff, writes a Conventional Commits message, runs the commit.
 
+The two coordinate: `atomic-commits` defers to `commit-planning` when a diff needs to be decomposed into multiple commits.
+
 The primary workflow the skills support is commit-as-you-go: pause at natural breakpoints during the work and commit before continuing, which avoids producing tangled working trees that resist clean splitting. See [`claude/docs/atomic-commits-framing.md`](claude/docs/atomic-commits-framing.md) for the design rationale, source articles, and decisions log behind the cluster.
