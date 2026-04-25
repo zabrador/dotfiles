@@ -6,10 +6,10 @@ Design rationale and settled decisions for the two-skill system that helps Claud
 
 Two coordinated Claude skills for Claude Code:
 
-- **commit-planning** — the conceptual and decompositional skill. Understands what makes a commit atomic; helps plan work as a sequence of atomic commits; carves up tangled working trees into coherent commits.
-- **atomic-commits** — the execution skill. Runs at the moment of commit. Quick gut check that the current diff is atomic, crafts a Conventional Commits message, runs the git commands.
+- **commit-planning** — the planning and decompositional skill. Understands what makes a commit atomic; lays out the sequence of atomic commits a change requires; revises the plan when execution reveals it was wrong (and creates one post-hoc when none existed).
+- **atomic-commits** — the execution skill. Runs at each commit point. Generic gut-check on the current diff; if atomic, writes a Conventional Commits message and commits; if not, defers to `commit-planning`.
 
-`commit-planning` owns the deep understanding. `atomic-commits` owns the mechanics and defers to `commit-planning` when decomposition work is required.
+`commit-planning` owns the deep understanding and produces the commit plan. `atomic-commits` owns the mechanics and defers to `commit-planning` whenever the current diff isn't atomic.
 
 ## Three altitudes of planning
 
@@ -17,13 +17,13 @@ When thinking about where work lives, three levels:
 
 1. **Feature planning** — given a roadmap item, what's the sequence of shippable slices? Produces tickets/PRs. *Out of scope for both skills.*
 2. **Implementation planning** — given a single ticket, what's the sequence of commits that gets there? `commit-planning`'s territory.
-3. **Commit execution** — given a completed unit of work, craft the commit. `atomic-commits`'s territory.
+3. **Commit execution** — given the current diff, gut-check it and commit. `atomic-commits`'s territory.
 
 The boundary between levels 1 and 2 is **shippability to users**. Feature planning produces units that can ship independently and provide value on their own; implementation planning produces units that advance the codebase correctly but don't necessarily ship alone (e.g., a refactor commit enabling a later feature commit).
 
 ## commit-planning
 
-**Scope:** Decomposing implementation work into atomic commits. Applicable during planning mode before coding, when Claude notices mid-work that the task has multiple concerns, and as a fallback when `atomic-commits` encounters a tangled working tree.
+**Scope:** Producing the sequence of atomic commits a coding change requires, and revising that plan when execution diverges from it. The primary skill in the cluster — fires up front to lay out the work and again on the fly whenever the plan needs to change.
 
 **Owns:**
 - The conceptual definition of an atomic commit (including the SRP analogy)
@@ -31,37 +31,38 @@ The boundary between levels 1 and 2 is **shippability to users**. Feature planni
 - The refactor → feature → cleanup pattern ("make the change easy, then make the easy change")
 - Vertical vs horizontal slicing heuristics
 - Recognition of the "this task is actually a feature, slice it first" signal
-- Recovery path for tangled working trees
+- The commit plan: produced up front, revised when execution diverges, created post-hoc when none existed
 
 **Triggers:**
-- User enters planning mode for a non-trivial change
-- User asks to split, reorganize, or clean up commits
-- `atomic-commits` detects a non-atomic diff and invokes `commit-planning`
+- Plan mode is active — any change Claude is planning, trivial or not
+- `atomic-commits` defers because the current diff isn't atomic
+- User explicitly asks to plan, split, reorganize, or clean up commits
 
 ## atomic-commits
 
 **Scope:** Executing a single commit at the moment of committing.
 
 **Owns:**
-- A compact atomicity gut check (not full analysis)
+- A compact atomicity gut check (not full analysis), independent of any plan
 - Conventional Commits message format
 - Git mechanics (status, diff, add, commit)
-- An escape hatch: if the gut check fails, stop and defer to `commit-planning`
+- The handoff to `commit-planning` when the gut check fails
 
 **Triggers:**
 - User asks Claude to commit
-- Claude reaches a natural breakpoint in the commit-as-you-go workflow and is about to commit
+- Claude finishes a planned commit unit and is about to commit it
 
 **Explicitly does not own:**
 - Full decomposition of tangled trees (defers to `commit-planning`)
 - Deep atomicity reasoning (uses a compact checklist instead)
 - Refactor/feature/cleanup decomposition
+- Awareness of the plan — the gut check is plan-independent by design
 
 ## Workflow
 
-**Primary: commit as you go.** At natural breakpoints during the work — refactor finished, function added, feature wired up — pause and commit before continuing. This avoids producing a tangled working tree that resists clean splitting. It mostly sidesteps the "impossible to split" failure mode by ensuring work never becomes tangled in the first place.
+**Primary: plan, then execute.** When Claude takes on a non-trivial coding change, `commit-planning` runs first and lays out the sequence of atomic commits the change needs. Plan mode is the canonical trigger — whenever Claude enters plan mode, producing a commit plan is part of the work. Trivial changes collapse to single-commit plans at near-zero overhead, so there's no triviality threshold to apply. Claude then executes against the plan, invoking `atomic-commits` at each commit point.
 
-**Fallback: tangled-tree recovery.** If a working tree is already mixed (multiple concerns committed together in the staging area or working copy), `atomic-commits` invokes `commit-planning` to produce a decomposition plan, then commits each piece per the plan.
+**Replanning and recovery.** Plans drift on contact with code. Execution can reveal an unanticipated refactor, a hidden dependency, or a commit boundary the plan missed. The mechanism: `atomic-commits` runs a generic gut-check against the current diff, independent of any plan. If the diff fails the check, `atomic-commits` defers to `commit-planning`, which updates the plan (or creates one from scratch, for cases where Claude went straight to committing without planning first). Work resumes against the revised plan.
 
 ## Conventions
 
@@ -111,8 +112,14 @@ Tangled working trees resist clean splits regardless of tooling quality; the lev
 **Split into two skills along phase lines, not knowledge-type lines.**
 Conceptual-only skills trigger poorly because skills fire when tied to a moment of work. Phase-based splits (planning / execution) give each skill an unambiguous trigger moment.
 
-**Commit-as-you-go as the primary workflow.**
-Avoids the tangled-tree problem at its source. End-of-work splitting produces tangled trees; planning-phase-only guidance is too ambitious for one skill.
+**Plan-led with in-flight replanning as the primary workflow.**
+*Supersedes an earlier "commit-as-you-go" decision.* Plan mode is the natural rhythm of Claude Code work, and laying out the commit sequence is a natural extension of it. The original objection — that planning-phase-only guidance is too ambitious for one skill — was made when only one skill was contemplated; split across two skills, the planner carries the conceptual load and the executor stays slim. Plan-led isn't end-of-work splitting (which produces tangled trees); replanning during execution handles plan drift honestly rather than pretending plans are rigid.
+
+**`atomic-commits`'s gut check stays plan-independent.**
+The skill checks the current diff against atomicity criteria, never against a plan. This keeps `atomic-commits` slim, decoupled, and robust when no plan exists in context (e.g., the user jumped straight to committing). The plan, when it exists, lives in Claude's working memory and shapes Claude's coding behavior — not `atomic-commits`'s logic.
+
+**`commit-planning` always fires in plan mode, regardless of triviality.**
+A trivial change just produces a single-commit plan at near-zero overhead, so there's no triviality threshold to apply. Keeps the trigger sharp; spares the skill from having to make a judgment call about whether to fire.
 
 **Conventional Commits.**
 User preference. Widely adopted, tool-friendly (semantic-release, changelog generators), and well-represented in source material.
@@ -124,7 +131,7 @@ User preference. Split when it clearly helps review; don't force splits for smal
 It's decompositional guidance, not execution guidance. `atomic-commits` only needs to recognize "this diff spans multiple concerns" and defer.
 
 **`atomic-commits` slims down substantially; conceptual content migrates to `commit-planning`.**
-Most of the atomicity framework is planning knowledge that `commit-planning` should own. `atomic-commits` becomes roughly 30–40 lines: gut check, message format, git mechanics, escape hatch.
+Most of the atomicity framework is planning knowledge that `commit-planning` should own. `atomic-commits` becomes roughly 30–40 lines: gut check, message format, git mechanics, handoff to `commit-planning`.
 
 **When `atomic-commits` fires without `commit-planning` available, handle honestly.**
 If a diff fails the gut check and `commit-planning` isn't invokable, `atomic-commits` tells the user the diff needs splitting and offers to help — rather than silently producing a bad commit or attempting full decomposition itself.
@@ -134,6 +141,6 @@ Velasco's full-stack-slice framing operates at a different altitude (feature →
 
 ## Open questions
 
-- Does `commit-planning` need to trigger specifically during planning mode, or more broadly? Unclear until we test.
+- How explicit does `commit-planning`'s SKILL.md description need to be about plan mode, so that "fires in plan mode" actually happens reliably and isn't aspirational? Skill triggers are classifier-shaped — the description has to give Claude a sharp signal.
 - How does `commit-planning` surface itself when `atomic-commits` invokes it — explicit reference, natural invocation, or something else? To be decided during the design of `commit-planning`.
 - Should behavior differ between Claude Code and other surfaces? Current scope is Claude Code only.
