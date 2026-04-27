@@ -65,6 +65,10 @@ This avoids the most common failure mode: accumulating a large batch of changes 
 
 When in the middle of work and noticing that the current changes have started to span multiple concerns, that's the signal to pause, commit what's complete, and start the next unit cleanly. Don't wait until the whole task is done.
 
+## When the commit boundary is really a design question
+
+Sometimes "which commit does this behavior belong to?" is really "is this behavior intrinsic to the abstraction, or a per-consumer concern?" — a software-design question, not a commit-planning question. If you can't decide where a behavior goes in your commit sequence, the design probably hasn't decided yet either. Resolve the design first; the commit sequence follows.
+
 ## Recognizing that a "task" is actually a feature
 
 Sometimes what's been framed as a single task is actually a feature — a unit that needs to be sliced into multiple shippable tickets before commit-level planning makes sense.

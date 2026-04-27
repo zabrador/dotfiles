@@ -32,6 +32,7 @@ The boundary between levels 1 and 2 is **shippability to users**. Feature planni
 - The refactor → feature → cleanup pattern ("make the change easy, then make the easy change")
 - Vertical vs horizontal slicing heuristics
 - Recognition of the "this task is actually a feature, slice it first" signal
+- Recognition of when a commit-assignment problem is a software-design problem in disguise
 - The commit plan: produced up front, revised when execution diverges, created post-hoc when none existed
 
 **Triggers:**
@@ -91,6 +92,8 @@ Secondary sources reviewed but not anchored on: Samuel Faure (primarily motivati
 
 **The refactor → feature → cleanup pattern.** When a task naturally has multiple commits, structure them as (1) refactors that enable the feature, (2) the feature itself, (3) cleanup afterward — each as its own commit. "Make the change easy, then make the easy change."
 
+**Commit assignment as design proxy.** "Which commit does this behavior belong to?" is sometimes "is this behavior intrinsic to the abstraction, or a per-consumer concern?" in disguise — a software-design question that commit-planning recognizes and defers to. Resolve the design; the commit sequence follows.
+
 **Vertical slicing with inversion.** At the ticket/PR level, slice vertically (thin full-stack wedges). Within a PR at the commit level, horizontal layering (enabling refactor, then feature) is often correct because those units don't need to ship independently — they need to be reviewable and revertible.
 
 ## How to engage
@@ -139,6 +142,9 @@ Velasco's full-stack-slice framing operates at a different altitude (feature →
 
 **Atomicity reframed as three roles, not a flat list of definitions.**
 The original framing stacked SRP, the single-sentence test, the three operational criteria, the revert test, and the "and" heuristic as if they were five attempts at one definition. They actually answer three different questions — what atomicity *is* (principle), how to *arrive* at it (generative move), and how to *check* it (verification). Reorganized along those three roles, with the "work backward from the feature" generative move promoted from a buried tip in the refactor pattern to a top-level concept threaded through Planning-during-work and Recovery. The generative move is what makes tangled-tree recovery tractable; burying it in the refactor pattern hid it from exactly the case where it does the most work.
+
+**Foundational vs layered is software design, not commit planning.**
+*Supersedes an earlier decision to add the heuristic to `commit-planning`.* The two tests (spec-identity, consumer-universality) are general software-design heuristics, independent of how work is decomposed into commits. Putting them in `commit-planning` made it a vehicle for design knowledge it doesn't own. The narrower commit-planning-specific insight that remains is the recognition that *when commit-assignment is hard, the question is usually a design question in disguise — resolve the design first*. That escalation stays in `commit-planning` as a short section parallel to "this task is actually a feature"; the design heuristics themselves don't.
 
 ## Open questions
 
