@@ -26,8 +26,9 @@ The boundary between levels 1 and 2 is **shippability to users**. Feature planni
 **Scope:** Producing the sequence of atomic commits a coding change requires, and revising that plan when execution diverges from it. The primary skill in the cluster — fires up front to lay out the work and again on the fly whenever the plan needs to change.
 
 **Owns:**
-- The conceptual definition of an atomic commit (including the SRP analogy)
-- The three operational criteria (passes CI, deployable, no dead code) plus the revert test
+- The **principle** of commit atomicity (SRP analogy + "and" heuristic as its linguistic form)
+- The **generative move** for arriving at atomic commits ("work backward from the feature: what would the code need to look like for this change to be small?")
+- The **verification** criteria (passes CI, deployable, no dead code, plus the revert test)
 - The refactor → feature → cleanup pattern ("make the change easy, then make the easy change")
 - Vertical vs horizontal slicing heuristics
 - Recognition of the "this task is actually a feature, slice it first" signal
@@ -83,13 +84,10 @@ Secondary sources reviewed but not anchored on: Samuel Faure (primarily motivati
 
 ## Key concepts encoded across both skills
 
-**Atomicity checks.** A commit is atomic when:
-- It passes CI
-- It is deployable
-- It introduces no dead code
-- It passes the revert test (reverting it would remove only the described change, nothing else)
-
-**The "and" heuristic.** If the commit title needs the word "and" to describe what changed, it is probably multiple commits.
+**Atomicity, in three roles.** Not five competing definitions but three jobs:
+- **Principle.** A commit does one thing — version-control SRP. The "and" heuristic is its linguistic form: if the title needs "and" to describe what changed, the commit is probably multiple commits.
+- **Generative move.** "Work backward from the feature: what would the code need to look like for this change to be small?" The move that produces atomic commits, especially in the tangled-tree case.
+- **Verification.** A commit is atomic when it passes CI, is deployable, introduces no dead code, and passes the revert test (reverting removes only the described change, nothing else).
 
 **The refactor → feature → cleanup pattern.** When a task naturally has multiple commits, structure them as (1) refactors that enable the feature, (2) the feature itself, (3) cleanup afterward — each as its own commit. "Make the change easy, then make the easy change."
 
@@ -138,6 +136,9 @@ If a diff fails the gut check and `commit-planning` isn't invokable, `atomic-com
 
 **Feature-level slicing is out of scope for both skills.**
 Velasco's full-stack-slice framing operates at a different altitude (feature → tickets). Keeping it out of scope prevents `commit-planning` from having an ambiguous trigger story. Retained as supporting material for the "this task is actually a feature" recovery path.
+
+**Atomicity reframed as three roles, not a flat list of definitions.**
+The original framing stacked SRP, the single-sentence test, the three operational criteria, the revert test, and the "and" heuristic as if they were five attempts at one definition. They actually answer three different questions — what atomicity *is* (principle), how to *arrive* at it (generative move), and how to *check* it (verification). Reorganized along those three roles, with the "work backward from the feature" generative move promoted from a buried tip in the refactor pattern to a top-level concept threaded through Planning-during-work and Recovery. The generative move is what makes tangled-tree recovery tractable; burying it in the refactor pattern hid it from exactly the case where it does the most work.
 
 ## Open questions
 

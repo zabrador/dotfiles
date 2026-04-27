@@ -9,7 +9,19 @@ A companion skill, `atomic-commits`, handles the mechanics of actually writing c
 
 ## What makes a commit atomic
 
-An atomic commit does exactly one thing — it's the version-control equivalent of the single responsibility principle. The test isn't "how many lines" or "how many files"; it's whether the change can be described in a single meaningful sentence without tacking on "and also..." for unrelated work.
+Atomicity has three roles to play, each answering a different question. They are not competing definitions — they're a principle, a method, and a test, working together.
+
+### Principle — what an atomic commit *is*
+
+An atomic commit does exactly one thing — it's the version-control equivalent of the single responsibility principle. Operationalized linguistically: a commit is atomic if its title can be written as a single meaningful sentence without an "and" bridging unrelated work. If the title needs "and" to describe what changed, the commit is probably two commits.
+
+### Generative move — how to *arrive* at atomic commits
+
+Work backward from the feature: **what would the code need to look like for this change to be small?**
+
+This is the move that produces atomic commits, not just defines them. It is especially load-bearing when staring at a tangled working tree, where the question reframes "how do I split this mess?" into "how should the code have looked so this wouldn't have been a mess?" The answer usually surfaces an enabling refactor that should have come — and should now come — first.
+
+### Verification — how to *check* a commit you've produced
 
 A planned commit is atomic when, once implemented, it will satisfy all three of these criteria:
 
@@ -33,7 +45,7 @@ The most common and reliable decomposition: **make the change easy, then make th
 
 Each is its own commit. This separation means that if the feature is later reverted, the refactor and cleanup remain as independent improvements to the codebase.
 
-When planning, work backward from the feature: "What would the code need to look like for this change to be small?" The answer describes the enabling refactor, which goes first.
+Apply the generative move from above: working backward from the feature surfaces the enabling refactor, which goes first.
 
 ### Vertical versus horizontal slicing
 
@@ -43,13 +55,11 @@ At the ticket or PR level, prefer **vertical slicing** — thin full-stack wedge
 
 The heuristic inverts because the units have different purposes. PRs need to ship independently; commits within a PR need to be reviewable and revertible, which often means layering.
 
-### The "and" heuristic
-
-A planning sanity check: for each commit being planned, write out the one-sentence title it would have. If any title needs the word "and" to describe what the commit does, that commit is probably multiple commits. Split it before coding begins.
-
 ## Planning during work: commit as you go
 
 The ideal isn't to plan every commit up front and then execute — it's to plan the next commit at each natural breakpoint. When a logical unit is complete (a refactor finished, a function added, a feature wired up), pause, commit it via `atomic-commits`, and plan the next unit.
+
+The question to ask at each breakpoint is the generative one: *what would make the next change small?* If the answer points to an enabling refactor that hasn't been done yet, that refactor is the next commit, not the feature work itself.
 
 This avoids the most common failure mode: accumulating a large batch of changes and then trying to split them apart. Tangled working trees resist clean separation in ways that are much easier to prevent than to fix.
 
@@ -71,13 +81,17 @@ When this happens, don't produce a commit plan anyway. Instead, flag the issue a
 
 Sometimes a work session produces mixed changes before commit planning happened — feature work plus an inline refactor plus a stray fix, all sitting in the uncommitted diff. The task is to produce a decomposition plan that separates them.
 
-1. **Inventory.** Run `git status` and `git diff` to see everything present. Group changes by logical concern, not by file — a single file often contributes to multiple commits.
+The leverage here is upstream of the diff. Tangled trees resist clean splits because the code wasn't shaped for the change to be small in the first place. So the first step is the generative re-frame, not hunk-sorting.
 
-2. **Order the plan.** Determine what order the commits must go in. Refactors usually come first (since feature code may depend on them), features next, cleanup last. If a planned "refactor" commit would reference a function that only exists after the "feature" commit, the refactor isn't actually independent — either reorder, or accept they must be one commit.
+1. **Re-frame using the generative move.** Before inventorying, ask: *what would the code need to look like for the change I just made to have been small?* The answer usually surfaces an enabling refactor that should have come first — and that tells you what commit one is. Without this step, the inventory below produces a sort of the existing mess; with it, the inventory produces a sequence that makes sense.
 
-3. **Check each planned commit against the criteria.** Will it pass CI? Is it deployable? Does it leave dead code? Does it pass the revert test?
+2. **Inventory.** Run `git status` and `git diff` to see everything present. Group changes by logical concern, not by file — a single file often contributes to multiple commits.
 
-4. **Accept honest non-atomic commits when necessary.** If changes are genuinely inseparable — a refactor that couldn't have been done without the feature it enables — plan them as a single commit with a message that honestly describes both. A truthful non-atomic commit is better than a dishonest "atomic" one.
+3. **Order the plan.** Determine what order the commits must go in. Refactors usually come first (since feature code may depend on them), features next, cleanup last. If a planned "refactor" commit would reference a function that only exists after the "feature" commit, the refactor isn't actually independent — either reorder, or accept they must be one commit.
+
+4. **Check each planned commit against the criteria.** Will it pass CI? Is it deployable? Does it leave dead code? Does it pass the revert test?
+
+5. **Accept honest non-atomic commits when necessary.** If changes are genuinely inseparable — a refactor that couldn't have been done without the feature it enables — plan them as a single commit with a message that honestly describes both. A truthful non-atomic commit is better than a dishonest "atomic" one.
 
 Once the plan is in place, `atomic-commits` executes it, staging hunks (`git add -p`) and committing one planned commit at a time.
 
