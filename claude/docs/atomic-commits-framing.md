@@ -1,23 +1,24 @@
 # Atomic Commits Skill System: Conceptual Framing
 
-Design rationale and settled decisions for the two-skill system that helps Claude produce atomic git commits. The audience is someone reasoning about the design of these skills — future-you revising them, or an LLM helping with revisions. The SKILL.md files and source articles serve readers learning atomic commits.
+Design rationale and settled decisions for the skill system that helps Claude produce atomic git commits. The audience is someone reasoning about the design of these skills — future-you revising them, or an LLM helping with revisions. The SKILL.md files and source articles serve readers learning atomic commits.
 
 ## What we're building
 
-Two coordinated Claude skills for Claude Code:
+Three coordinated Claude skills for Claude Code, split along two axes — phase (planning vs execution) and workflow mode (forward planning vs re-shaping committed history):
 
-- **commit-planning** — the planning and decompositional skill. Understands what makes a commit atomic; lays out the sequence of atomic commits a change requires; revises the plan when execution reveals it was wrong (and creates one post-hoc when none existed).
-- **atomic-commits** — the execution skill. Runs at each commit point. Generic gut-check on the current diff; if atomic, writes a Conventional Commits message and commits; if not, defers to `commit-planning`.
+- **commit-planning** — the forward-planning skill. Understands what makes a commit atomic; lays out the sequence of atomic commits a fresh change requires; revises the plan when execution reveals it was wrong (and creates one post-hoc when none existed).
+- **atomic-commits** — the execution skill. Runs at each commit point regardless of which planner produced the plan. Generic gut-check on the current diff; if atomic, writes a Conventional Commits message and commits; if not, defers to `commit-planning`.
+- **branch-redecomposition** — the re-shaping skill. Replaces `commit-planning` as the planner when the work is reshaping a branch's already-committed history rather than planning fresh work. Adds patterns specific to that workflow (decomposing from the diff rather than the existing commit log, synthesizing intermediate code states, importer-before-exporter ordering); delegates atomicity reasoning back to `commit-planning`.
 
-`commit-planning` owns the deep understanding and produces the commit plan. `atomic-commits` owns the mechanics and defers to `commit-planning` whenever the current diff isn't atomic.
+`commit-planning` and `branch-redecomposition` own the planning thinking; `atomic-commits` is the universal executor.
 
 ## Three altitudes of planning
 
 When thinking about where work lives, three levels:
 
-1. **Feature planning** — given a roadmap item, what's the sequence of shippable slices? Produces tickets/PRs. *Out of scope for both skills.*
-2. **Implementation planning** — given a single ticket, what's the sequence of commits that gets there? `commit-planning`'s territory.
-3. **Commit execution** — given the current diff, gut-check it and commit. `atomic-commits`'s territory.
+1. **Feature planning** — given a roadmap item, what's the sequence of shippable slices? Produces tickets/PRs. *Out of scope for all three skills.*
+2. **Implementation planning** — given a single ticket, what's the sequence of commits that gets there? `commit-planning`'s territory for forward work; `branch-redecomposition`'s territory when reshaping a branch's already-committed history.
+3. **Commit execution** — given the current diff, gut-check it and commit. `atomic-commits`'s territory regardless of which planner produced the plan.
 
 The boundary between levels 1 and 2 is **shippability to users**. Feature planning produces units that can ship independently and provide value on their own; implementation planning produces units that advance the codebase correctly but don't necessarily ship alone (e.g., a refactor commit enabling a later feature commit).
 
@@ -60,11 +61,38 @@ The boundary between levels 1 and 2 is **shippability to users**. Feature planni
 - Refactor/feature/cleanup decomposition
 - Awareness of the plan — the gut check is plan-independent by design
 
+## branch-redecomposition
+
+**Scope:** Re-shaping an existing committed branch into a clean sequence of atomic commits on a fresh branch off the merge-base. Replaces `commit-planning` as the planner for this workflow; same atomicity criteria and decomposition heuristics, but with workflow-specific patterns that only matter when the starting point is committed history rather than uncommitted work.
+
+**Owns:**
+- The fresh-branch-off-the-merge-base default (rather than in-place force-push)
+- "Decompose from the diff, not the previous commit log" as the structural anchor
+- The synthesized-intermediate-state pattern (writing minimal foundational code that doesn't appear verbatim in the original branch's HEAD)
+- Functional-equivalence-not-byte-equivalence as the verification standard
+- The importer-before-exporter ordering rule and its verification policy (scoped typecheck at layer boundaries, especially after export removals)
+- The "behavior-preserving can be loose" honesty rule when migrations inherently change behavior
+- The co-author-trailer-amend mechanic for crediting original authors across rewritten history
+
+**Triggers:**
+- User asks to re-decompose, restructure, redo commits, or clean up history on an existing branch
+- User wants to reshape a finished branch before opening or updating a PR
+- User mentions rebasing for cleanliness or applying atomic-commit discipline retroactively
+
+**Explicitly does not own:**
+- The atomicity criteria themselves (`commit-planning`)
+- General decomposition heuristics — refactor → feature → cleanup, the generative move, vertical/horizontal slicing (`commit-planning`)
+- Single-commit execution (`atomic-commits`)
+- Foundational vs layered as a design question — escalation territory inside `commit-planning`'s "When the commit boundary is really a design question" section
+- In-place rebase plus force-push of shared branches — separate workflow, separate confirmations, not the default this skill produces
+
 ## Workflow
 
-**Primary: plan, then execute.** When Claude takes on a non-trivial coding change, `commit-planning` runs first and lays out the sequence of atomic commits the change needs. Plan mode is the canonical trigger — whenever Claude enters plan mode, producing a commit plan is part of the work. Trivial changes collapse to single-commit plans at near-zero overhead, so there's no triviality threshold to apply. Claude then executes against the plan, invoking `atomic-commits` at each commit point.
+**Forward work — plan, then execute.** When Claude takes on a non-trivial coding change, `commit-planning` runs first and lays out the sequence of atomic commits the change needs. Plan mode is the canonical trigger — whenever Claude enters plan mode, producing a commit plan is part of the work. Trivial changes collapse to single-commit plans at near-zero overhead, so there's no triviality threshold to apply. Claude then executes against the plan, invoking `atomic-commits` at each commit point.
 
 **Replanning and recovery.** Plans drift on contact with code. Execution can reveal an unanticipated refactor, a hidden dependency, or a commit boundary the plan missed. The mechanism: `atomic-commits` runs a generic gut-check against the current diff, independent of any plan. If the diff fails the check, `atomic-commits` defers to `commit-planning`, which updates the plan (or creates one from scratch, for cases where Claude went straight to committing without planning first). Work resumes against the revised plan.
+
+**Re-shaping committed history.** When the work isn't fresh planning but reshaping a branch that already has committed history, `branch-redecomposition` is the planner instead of `commit-planning`. Default workflow: fresh branch off the merge-base, decompose `merge-base..HEAD` as a single tangled patch (ignoring the original commit log's groupings), produce the new commit sequence using `commit-planning`'s atomicity criteria and decomposition heuristics, and execute via `atomic-commits` — same executor, same gut-check, same Conventional Commits format. In-place rebase plus force-push is a separate, riskier follow-up workflow that requires explicit confirmation about open review state.
 
 ## Conventions
 
@@ -83,7 +111,9 @@ Four articles anchor the skills:
 
 Secondary sources reviewed but not anchored on: Samuel Faure (primarily motivational), PHP Architect (tactical git commands — useful for `atomic-commits`'s mechanics section but not the framing), Fausto Núñez Alberro (general practice argument), and several shallower articles.
 
-## Key concepts encoded across both skills
+The `branch-redecomposition` skill draws on these articles for atomicity reasoning (delegated to `commit-planning`), but its workflow-specific patterns — synthesized intermediate states, importer-before-exporter, functional-equivalence-not-byte-equivalence — come from practitioner experience in real re-decomposition sessions, not from published sources.
+
+## Key concepts encoded across the skill system
 
 **Atomicity, in three roles.** Not five competing definitions but three jobs:
 - **Principle.** A commit does one thing — version-control SRP. The "and" heuristic is its linguistic form: if the title needs "and" to describe what changed, the commit is probably multiple commits.
@@ -96,9 +126,13 @@ Secondary sources reviewed but not anchored on: Samuel Faure (primarily motivati
 
 **Vertical slicing with inversion.** At the ticket/PR level, slice vertically (thin full-stack wedges). Within a PR at the commit level, horizontal layering (enabling refactor, then feature) is often correct because those units don't need to ship independently — they need to be reviewable and revertible.
 
+**Synthesized intermediate state (re-decomposition).** When re-decomposing committed history, foundational commits often need code that doesn't appear verbatim anywhere in `merge-base..HEAD` — a minimal version of the new abstraction that later commits modify additively. This drift is intentional. Verification relies on functional / test parity (the new HEAD behaves like the original), not byte parity (the new HEAD's diff matches the original).
+
+**Importer before exporter (re-decomposition).** When a commit removes a previously exported identifier, every commit between "removal" and "all importers migrated" fails to typecheck standalone. The fix is to reorder commits so importers migrate before the exporter deletes the helper. Verification policy: scoped typecheck at every layer boundary, especially after any commit that removes or restructures previously exported identifiers.
+
 ## How to engage
 
-- **Push back on scope creep between `commit-planning` and `atomic-commits`.** Content that belongs to one should not migrate to the other without explicit reconsideration.
+- **Push back on scope creep between the three skills.** Content that belongs to one should not migrate to another without explicit reconsideration. Particular pressure points: deep atomicity reasoning drifting into `atomic-commits`, design heuristics drifting into `commit-planning`, and forward-planning content drifting into `branch-redecomposition`.
 - **When introducing a concept drawn from the source articles, name the source.**
 
 ---
@@ -145,6 +179,9 @@ The original framing stacked SRP, the single-sentence test, the three operationa
 
 **Foundational vs layered is software design, not commit planning.**
 *Supersedes an earlier decision to add the heuristic to `commit-planning`.* The two tests (spec-identity, consumer-universality) are general software-design heuristics, independent of how work is decomposed into commits. Putting them in `commit-planning` made it a vehicle for design knowledge it doesn't own. The narrower commit-planning-specific insight that remains is the recognition that *when commit-assignment is hard, the question is usually a design question in disguise — resolve the design first*. That escalation stays in `commit-planning` as a short section parallel to "this task is actually a feature"; the design heuristics themselves don't.
+
+**Workflow-mode split is permitted alongside the phase-line split.**
+The original system was split along phase lines (planning vs execution) so each skill had an unambiguous trigger moment. `branch-redecomposition` adds a third skill on a different axis — workflow mode (re-shaping committed history vs forward-planning new work). This doesn't revise the phase-line decision; it adds a complementary axis. The new skill has a sharp trigger (the user asks to reshape an existing committed branch), and its description partitions cleanly from `commit-planning`'s (which fires for forward planning). Both planners delegate single-commit execution to `atomic-commits`, preserving it as the universal terminal step. The Skill best-practices guidance ("organize by purpose; create separate skills for different purposes rather than a single skill that's meant to do everything") supports this — re-shaping committed history is a distinct purpose from forward planning, with different starting state, different mechanics, and different characteristic mistakes.
 
 ## Open questions
 
