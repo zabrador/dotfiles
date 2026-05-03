@@ -1,11 +1,11 @@
 ---
-name: branch-redecomposition
-description: Re-decompose an existing committed branch into a clean atomic commit sequence on a fresh branch off the merge-base. Use this skill when the user wants to reshape a finished branch's commit history before review, clean up an ad-hoc branch built without commit discipline, or apply atomic-commit discipline retroactively. Use whenever the user mentions re-decomposing a branch, redoing commits on a branch, restructuring a branch's history, or rebasing for cleanliness on an existing branch. This skill builds on `commit-planning` for atomicity reasoning — it adds patterns that only apply when re-shaping committed history, not when planning fresh work.
+name: replanning-branches
+description: Re-plan an existing committed branch into a clean atomic commit sequence on a fresh branch off the merge-base. Use this skill when the user wants to reshape a finished branch's commit history before review, clean up an ad-hoc branch built without commit discipline, or apply atomic-commit discipline retroactively. Use whenever the user mentions re-decomposing a branch, redoing commits on a branch, restructuring a branch's history, or rebasing for cleanliness on an existing branch. This skill builds on `planning-commits` for atomicity reasoning — it adds patterns that only apply when re-shaping committed history, not when planning fresh work.
 ---
 
-This skill handles re-shaping an existing committed branch into a clean sequence of atomic commits on a fresh branch off the merge-base. It operates one step removed from `commit-planning`: same atomicity criteria, same decomposition heuristics, but with workflow-specific patterns that only matter when the starting point is committed history rather than uncommitted work.
+This skill handles re-shaping an existing committed branch into a clean sequence of atomic commits on a fresh branch off the merge-base. It operates one step removed from `planning-commits`: same atomicity criteria, same decomposition heuristics, but with workflow-specific patterns that only matter when the starting point is committed history rather than uncommitted work.
 
-The companion skills handle the parts this one delegates. `commit-planning` owns the conceptual definition of atomicity (the principle, the generative move, the verification criteria) and the general decomposition heuristics (refactor → feature → cleanup, vertical/horizontal slicing). `atomic-commits` owns single-commit execution. This skill provides the workflow framing and the patterns specific to re-decomposition.
+The companion skills handle the parts this one delegates. `planning-commits` owns the conceptual definition of atomicity (the principle, the generative move, the verification criteria) and the general decomposition heuristics (refactor → feature → cleanup, vertical/horizontal slicing). `committing-changes` owns single-commit execution. This skill provides the workflow framing and the patterns specific to re-decomposition.
 
 ## Default to a fresh branch off the merge-base
 
@@ -28,11 +28,11 @@ The single biggest trap in re-decomposition is anchoring on the previous commit 
 
 …not the cleanest atomic decomposition.
 
-**The right input is `merge-base..HEAD` as a single tangled patch.** Treat it the way `commit-planning`'s recovery section treats an uncommitted diff: group hunks by *concern*, not by which existing commit they came from.
+**The right input is `merge-base..HEAD` as a single tangled patch.** Treat it the way `planning-commits`'s recovery section treats an uncommitted diff: group hunks by *concern*, not by which existing commit they came from.
 
 The original commit titles are at most a *signal* of seams that exist in the diff — useful as a hint about where natural boundaries might be — never a structural template.
 
-A change appearing late in the previous branch's commit log does not imply it's a layered refinement. It may simply have been built late but be foundationally part of the abstraction. Position is not a signal of foundationality. Whether a behavior is foundational or layered is a software-design question — see `commit-planning`'s "When the commit boundary is really a design question" section for when to escalate.
+A change appearing late in the previous branch's commit log does not imply it's a layered refinement. It may simply have been built late but be foundationally part of the abstraction. Position is not a signal of foundationality. Whether a behavior is foundational or layered is a software-design question — see `planning-commits`'s "When the commit boundary is really a design question" section for when to escalate.
 
 ## Iterate toward the final diff with synthesized intermediate states
 
@@ -40,7 +40,7 @@ Many atomic commits cannot be assembled by raw hunk-pick from the final diff. A 
 
 That minimal version is **synthesized intermediate code** that does not appear verbatim anywhere in `merge-base..HEAD`. You write it for the commit; later commits modify or extend it; the final state converges with the original branch's HEAD (or close to it).
 
-This is the refactor → feature → cleanup pattern from `commit-planning`, applied at the commit level. *Make the change easy* (write minimal foundational scaffolding), then *make the easy change* (each layered feature is its own commit).
+This is the refactor → feature → cleanup pattern from `planning-commits`, applied at the commit level. *Make the change easy* (write minimal foundational scaffolding), then *make the easy change* (each layered feature is its own commit).
 
 ### Functional equivalence, not byte equivalence
 
@@ -86,10 +86,10 @@ Be honest in the commit message. Use `refactor:` only when user-visible behavior
 
 ## What this skill does not own
 
-- **The atomicity criteria themselves.** Owned by `commit-planning`: the principle (does one thing, "and" heuristic), the generative move ("work backward from the feature"), and the verification criteria (passes CI, deployable, no dead code, revert test).
-- **The general decomposition heuristics.** Refactor → feature → cleanup and vertical/horizontal slicing live in `commit-planning`.
-- **Single-commit execution.** Once the plan is in place, each commit is executed via `atomic-commits` — staging hunks (`git add -p`), writing the Conventional Commits message, running `git commit`.
-- **Foundational vs layered as a design question.** When deciding whether a behavior is intrinsic to the abstraction or per-consumer, that's software design, not re-decomposition. `commit-planning` flags this escalation.
+- **The atomicity criteria themselves.** Owned by `planning-commits`: the principle (does one thing, "and" heuristic), the generative move ("work backward from the feature"), and the verification criteria (passes CI, deployable, no dead code, revert test).
+- **The general decomposition heuristics.** Refactor → feature → cleanup and vertical/horizontal slicing live in `planning-commits`.
+- **Single-commit execution.** Once the plan is in place, each commit is executed via `committing-changes` — staging hunks (`git add -p`), writing the Conventional Commits message, running `git commit`.
+- **Foundational vs layered as a design question.** When deciding whether a behavior is intrinsic to the abstraction or per-consumer, that's software design, not re-decomposition. `planning-commits` flags this escalation.
 - **In-place rebase plus force-push of shared branches.** Separate workflow, separate confirmations. Not the default this skill produces.
 
 ## What to avoid

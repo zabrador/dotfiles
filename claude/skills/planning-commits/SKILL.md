@@ -1,11 +1,11 @@
 ---
-name: commit-planning
-description: Plan the decomposition of coding work into atomic git commits. Use this skill when planning a non-trivial change before coding, when mid-work changes have started spanning multiple concerns, when asked to split or reorganize commits, when a working tree is tangled and needs to be separated into discrete commits, or when the atomic-commits skill needs help because a diff isn't atomic. Also use whenever the user mentions atomic commits, commit decomposition, or asks how to structure a sequence of commits.
+name: planning-commits
+description: Plan the decomposition of coding work into atomic git commits. Use this skill when planning a non-trivial change before coding, when mid-work changes have started spanning multiple concerns, when asked to split or reorganize commits, when a working tree is tangled and needs to be separated into discrete commits, or when the committing-changes skill needs help because a diff isn't atomic. Also use whenever the user mentions atomic commits, commit decomposition, or asks how to structure a sequence of commits.
 ---
 
 This skill handles the planning and decomposition of coding work into atomic git commits. It operates at the implementation-planning altitude: given a task that is about to be worked on (or was just completed without commits being made along the way), it produces the sequence of atomic commits that will land the work cleanly.
 
-A companion skill, `atomic-commits`, handles the mechanics of actually writing commit messages and running git commands. When this skill produces a plan, `atomic-commits` executes against it. When `atomic-commits` detects that the current diff isn't atomic and can't be safely committed, this skill takes over to produce a decomposition.
+A companion skill, `committing-changes`, handles the mechanics of actually writing commit messages and running git commands. When this skill produces a plan, `committing-changes` executes against it. When `committing-changes` detects that the current diff isn't atomic and can't be safely committed, this skill takes over to produce a decomposition.
 
 ## What makes a commit atomic
 
@@ -57,7 +57,7 @@ The heuristic inverts because the units have different purposes. PRs need to shi
 
 ## Planning during work: commit as you go
 
-The ideal isn't to plan every commit up front and then execute — it's to plan the next commit at each natural breakpoint. When a logical unit is complete (a refactor finished, a function added, a feature wired up), pause, commit it via `atomic-commits`, and plan the next unit.
+The ideal isn't to plan every commit up front and then execute — it's to plan the next commit at each natural breakpoint. When a logical unit is complete (a refactor finished, a function added, a feature wired up), pause, commit it via `committing-changes`, and plan the next unit.
 
 The question to ask at each breakpoint is the generative one: *what would make the next change small?* If the answer points to an enabling refactor that hasn't been done yet, that refactor is the next commit, not the feature work itself.
 
@@ -67,7 +67,7 @@ When in the middle of work and noticing that the current changes have started to
 
 ## When the commit boundary is really a design question
 
-Sometimes "which commit does this behavior belong to?" is really "is this behavior intrinsic to the abstraction, or a per-consumer concern?" — a software-design question, not a commit-planning question. If you can't decide where a behavior goes in your commit sequence, the design probably hasn't decided yet either. Resolve the design first; the commit sequence follows.
+Sometimes "which commit does this behavior belong to?" is really "is this behavior intrinsic to the abstraction, or a per-consumer concern?" — a software-design question, not a planning question. If you can't decide where a behavior goes in your commit sequence, the design probably hasn't decided yet either. Resolve the design first; the commit sequence follows.
 
 ## Recognizing that a "task" is actually a feature
 
@@ -97,7 +97,7 @@ The leverage here is upstream of the diff. Tangled trees resist clean splits bec
 
 5. **Accept honest non-atomic commits when necessary.** If changes are genuinely inseparable — a refactor that couldn't have been done without the feature it enables — plan them as a single commit with a message that honestly describes both. A truthful non-atomic commit is better than a dishonest "atomic" one.
 
-Once the plan is in place, `atomic-commits` executes it, staging hunks (`git add -p`) and committing one planned commit at a time.
+Once the plan is in place, `committing-changes` executes it, staging hunks (`git add -p`) and committing one planned commit at a time.
 
 ## What to avoid
 
