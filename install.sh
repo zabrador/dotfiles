@@ -40,17 +40,17 @@ if [ "$CODESPACES" = "true" ]; then
   git config --global --remove-section gpg
   git config --global --remove-section user
   echo "...git config simplification complete!"
-elif [ -n "$SSH_PRIVATE_KEY" ]; then
+elif [ -n "$SSH_PRIVATE_KEY_ED25519" ]; then
   echo "Importing SSH key from environment..."
 
   mkdir -p ~/.ssh
-  echo "$SSH_PRIVATE_KEY" > ~/.ssh/id
+  echo "$SSH_PRIVATE_KEY_ED25519" > ~/.ssh/id_ed25519
 
   # `ssh` requires the private key to only be readable by the current user
-  chmod 600 ~/.ssh/id
+  chmod 600 ~/.ssh/id_ed25519
 
   # Derive the public key from the private key
-  ssh-keygen -y -f ~/.ssh/id > ~/.ssh/id.pub
+  ssh-keygen -y -f ~/.ssh/id_ed25519 > ~/.ssh/id_ed25519.pub
 
   echo "...SSH key import complete!"
 fi
