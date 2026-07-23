@@ -15,3 +15,6 @@ if [[ -n $SSH_CONNECTION ]]; then
 else
   export EDITOR='code-insiders --wait'
 fi
+
+# Ona injects secrets into bash only; load them in zsh too.
+[ -f /etc/profile.d/ona-secrets.sh ] && . /etc/profile.d/ona-secrets.sh
