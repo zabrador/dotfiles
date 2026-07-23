@@ -55,4 +55,35 @@ elif [ -n "$SSH_PRIVATE_KEY_ED25519" ]; then
   echo "...SSH key import complete!"
 fi
 
+echo "Configuring login shell to zsh..."
+zsh_path=""
+if type "brew" > /dev/null 2>&1; then
+  brew_zsh="$(brew --prefix 2>/dev/null)/bin/zsh"
+  if [ -x "$brew_zsh" ]; then
+    zsh_path="$brew_zsh"
+  fi
+fi
+if [ -z "$zsh_path" ] && [ -x /usr/bin/zsh ]; then
+  zsh_path="/usr/bin/zsh"
+fi
+if [ -z "$zsh_path" ]; then
+  zsh_path="$(command -v zsh 2>/dev/null || true)"
+fi
+
+if [ -n "$zsh_path" ] && [ -x "$zsh_path" ]; then
+  if ! grep -qx "$zsh_path" /etc/shells 2>/dev/null; then
+    echo "Adding $zsh_path to /etc/shells..."
+    echo "$zsh_path" | sudo tee -a /etc/shells > /dev/null
+  fi
+
+  if ! sudo chsh -s "$zsh_path" "$(id -un)"; then
+    echo "...failed to set login shell to $zsh_path!" >&2
+    exit 1
+  fi
+  echo "...login shell set to $zsh_path!"
+else
+  echo "...login shell configuration failed: no usable zsh found!" >&2
+  exit 1
+fi
+
 echo "...dotfiles installation complete!"
