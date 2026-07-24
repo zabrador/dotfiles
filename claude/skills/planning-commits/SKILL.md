@@ -1,6 +1,6 @@
 ---
 name: planning-commits
-description: Plan the decomposition of coding work into atomic git commits. Use this skill when planning a non-trivial change before coding, when mid-work changes have started spanning multiple concerns, when asked to split or reorganize commits, when a working tree is tangled and needs to be separated into discrete commits, or when the committing-changes skill needs help because a diff isn't atomic. Also use whenever the user mentions atomic commits, commit decomposition, or asks how to structure a sequence of commits.
+description: Plan the decomposition of coding work into atomic git commits. Use this skill whenever plan mode is active (trivial or not — a trivial change produces a single-commit plan), when mid-work changes have started spanning multiple concerns, when asked to split or reorganize commits, when a working tree is tangled and needs to be separated into discrete commits, or when the committing-changes skill needs help because a diff isn't atomic. Also use whenever the user mentions atomic commits, commit decomposition, or asks how to structure a sequence of commits.
 ---
 
 This skill handles the planning and decomposition of coding work into atomic git commits. It operates at the implementation-planning altitude: given a task that is about to be worked on (or was just completed without commits being made along the way), it produces the sequence of atomic commits that will land the work cleanly.
@@ -33,7 +33,7 @@ Plus the **revert test**: if this commit were reverted later, would that revert 
 
 ## Decomposing a task into commits
 
-This is the core planning activity. Given a non-trivial task, produce a sequence of atomic commits that will land it.
+This is the core planning activity. Given a coding task, produce a sequence of atomic commits that will land it. Trivial changes produce a single-commit plan.
 
 ### The refactor → feature → cleanup pattern
 
@@ -55,15 +55,15 @@ At the ticket or PR level, prefer **vertical slicing** — thin full-stack wedge
 
 The heuristic inverts because the units have different purposes. PRs need to ship independently; commits within a PR need to be reviewable and revertible, which often means layering.
 
-## Planning during work: commit as you go
+## Planning ahead, committing as you execute
 
-The ideal isn't to plan every commit up front and then execute — it's to plan the next commit at each natural breakpoint. When a logical unit is complete (a refactor finished, a function added, a feature wired up), pause, commit it via `committing-changes`, and plan the next unit.
+Produce the commit sequence up front — typically when plan mode is active — then execute against it, invoking `committing-changes` at each planned commit point. Trivial changes collapse to a single-commit plan; there's no triviality threshold.
 
-The question to ask at each breakpoint is the generative one: *what would make the next change small?* If the answer points to an enabling refactor that hasn't been done yet, that refactor is the next commit, not the feature work itself.
+Plans drift on contact with code. When the current diff no longer matches the next planned unit (an unanticipated refactor, a hidden dependency, a missed boundary), pause and revise the plan before continuing. Don't accumulate mixed concerns hoping to sort them later.
+
+The question to ask when revising is the generative one: *what would make the next change small?* If the answer points to an enabling refactor that hasn't been done yet, that refactor becomes the next commit, not the feature work itself.
 
 This avoids the most common failure mode: accumulating a large batch of changes and then trying to split them apart. Tangled working trees resist clean separation in ways that are much easier to prevent than to fix.
-
-When in the middle of work and noticing that the current changes have started to span multiple concerns, that's the signal to pause, commit what's complete, and start the next unit cleanly. Don't wait until the whole task is done.
 
 ## When the commit boundary is really a design question
 

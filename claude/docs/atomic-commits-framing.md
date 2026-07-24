@@ -88,7 +88,7 @@ The boundary between levels 1 and 2 is **shippability to users**. Feature planni
 
 ## Workflow
 
-**Forward work — plan, then execute.** When Claude takes on a non-trivial coding change, `planning-commits` runs first and lays out the sequence of atomic commits the change needs. Plan mode is the canonical trigger — whenever Claude enters plan mode, producing a commit plan is part of the work. Trivial changes collapse to single-commit plans at near-zero overhead, so there's no triviality threshold to apply. Claude then executes against the plan, invoking `committing-changes` at each commit point.
+**Forward work — plan, then execute.** When Claude takes on a coding change, `planning-commits` runs first and lays out the sequence of atomic commits the change needs. Plan mode is the canonical trigger — whenever Claude enters plan mode, producing a commit plan is part of the work. Trivial changes collapse to single-commit plans at near-zero overhead, so there's no triviality threshold to apply. Claude then executes against the plan, invoking `committing-changes` at each commit point.
 
 **Replanning and recovery.** Plans drift on contact with code. Execution can reveal an unanticipated refactor, a hidden dependency, or a commit boundary the plan missed. The mechanism: `committing-changes` runs a generic gut-check against the current diff, independent of any plan. If the diff fails the check, `committing-changes` defers to `planning-commits`, which updates the plan (or creates one from scratch, for cases where Claude went straight to committing without planning first). Work resumes against the revised plan.
 

@@ -1,6 +1,6 @@
 ---
 name: committing-changes
-description: Execute a single atomic git commit in Claude Code — perform a quick gut check on the current diff, craft a Conventional Commits message, and run the commit. Use this skill whenever the user asks to commit, whenever Claude is about to commit, and at natural breakpoints during commit-as-you-go workflows. This skill does not perform decomposition of tangled changes; when the current diff contains multiple concerns, it defers to the planning-commits skill to produce a plan first.
+description: Execute a single atomic git commit in Claude Code — perform a quick gut check on the current diff, craft a Conventional Commits message, and run the commit. Use this skill whenever the user asks to commit, whenever Claude is about to commit, and at each planned commit point during plan-led work. This skill does not perform decomposition of tangled changes; when the current diff contains multiple concerns, it defers to the planning-commits skill to produce a plan first.
 ---
 
 This skill executes a single atomic commit in Claude Code. It performs a quick check that the current diff is atomic, crafts a Conventional Commits message, and runs the commit. For deep conceptual reasoning about atomic commits, or decomposition of tangled changes into a sequence of commits, it defers to the companion `planning-commits` skill.

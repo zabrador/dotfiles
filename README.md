@@ -27,4 +27,4 @@ Personal Claude Code configuration.
 
 The three coordinate: `committing-changes` is the universal executor; `planning-commits` plans forward work; `replanning-branches` takes over as the planner when reshaping a branch's already-committed history.
 
-The primary workflow the skills support is commit-as-you-go: pause at natural breakpoints during the work and commit before continuing, which avoids producing tangled working trees that resist clean splitting. See [`claude/docs/atomic-commits-framing.md`](claude/docs/atomic-commits-framing.md) for the design rationale, source articles, and decisions log behind the cluster.
+The primary workflow the skills support is plan-led with in-flight replanning: lay out the atomic commit sequence up front (typically in plan mode), execute against it, and revise the plan when execution reveals drift. This avoids producing tangled working trees that resist clean splitting. See [`claude/docs/atomic-commits-framing.md`](claude/docs/atomic-commits-framing.md) for the design rationale, source articles, and decisions log behind the cluster.
