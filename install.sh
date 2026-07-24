@@ -1,5 +1,7 @@
 echo "Installing dotfiles..."
 
+# --- Package manager / Stow -------------------------------------------------
+
 if type "brew" > /dev/null; then
   echo "Using brew for installation..."
   brew update
@@ -20,9 +22,17 @@ elif type "apt" > /dev/null; then
   fi
 fi
 
-echo "Installing antigen..."
-git clone https://github.com/zsh-users/antigen.git ~/.antigen
-echo "...antigen installation complete!"
+# --- Antigen ----------------------------------------------------------------
+
+if [ ! -d ~/.antigen ]; then
+  echo "Installing antigen..."
+  git clone https://github.com/zsh-users/antigen.git ~/.antigen
+  echo "...antigen installation complete!"
+else
+  echo "Antigen already present at ~/.antigen; skipping clone."
+fi
+
+# --- Stow home config -------------------------------------------------------
 
 # Move to the directory containing this install script
 cd "$(dirname "$0")"
@@ -33,6 +43,8 @@ for file in $(find shell -type f -exec basename {} \;); do
 done
 
 stow shell --target ~/
+
+# --- Environment-specific credentials / Codespaces --------------------------
 
 if [ "$CODESPACES" = "true" ]; then
   echo "Simplifying git config in codespaces..."
@@ -54,6 +66,8 @@ elif [ -n "$SSH_PRIVATE_KEY_ED25519" ]; then
 
   echo "...SSH key import complete!"
 fi
+
+# --- Login shell ------------------------------------------------------------
 
 echo "Configuring login shell to zsh..."
 zsh_path=""

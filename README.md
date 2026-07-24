@@ -7,13 +7,41 @@
 - [`zsh`](https://www.zsh.org)
 - [`git`](https://git-scm.com)
 - [`asdf`](https://github.com/asdf-vm/asdf)
+- A package manager: [Homebrew](https://brew.sh) or `apt` (used to install [GNU Stow](https://www.gnu.org/software/stow/) if missing)
+- `sudo` (login-shell setup; also `apt` package installs)
 
 ### Installation
 
+Clone into `~/.dotfiles`, then run the installer with an absolute path so the working directory does not matter:
+
 ```sh
 git clone git@github.com:zabrador/dotfiles.git ~/.dotfiles
-sh .dotfiles/install.sh
+sh ~/.dotfiles/install.sh
 ```
+
+The installer:
+
+1. Installs Stow (via brew or apt) if needed
+2. Clones [Antigen](https://github.com/zsh-users/antigen) into `~/.antigen` if missing
+3. **Removes any existing home-directory files** that would collide with the Stow package, then links the package with Stow
+4. In Codespaces, strips signing-related Git config sections; otherwise, if `SSH_PRIVATE_KEY_ED25519` is set, writes that key into `~/.ssh`
+5. Ensures Zsh is listed in `/etc/shells` and sets it as the login shell (`chsh`)
+
+### What gets linked
+
+The `shell/` Stow package maps these files into `~/`:
+
+| Repo path | Home path |
+| --- | --- |
+| `shell/.zshrc` | `~/.zshrc` |
+| `shell/.gitconfig` | `~/.gitconfig` |
+| `shell/.gitignore_global` | `~/.gitignore_global` |
+| `shell/.asdfrc` | `~/.asdfrc` |
+
+### Assumptions
+
+- Local (non-SSH) sessions use `code-insiders` as `$EDITOR` and as Git's diff/merge tool
+- On Ona hosts, secrets from `/etc/profile.d/ona-secrets.sh` are sourced into Zsh
 
 ## Claude
 
