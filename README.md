@@ -24,9 +24,10 @@ The installer:
 1. Installs Stow (via brew or apt) if needed
 2. Clones [Antigen](https://github.com/zsh-users/antigen) into `~/.antigen` if missing
 3. **Removes any existing home-directory files** that would collide with the Stow package, then links the package with Stow
-4. In Codespaces, strips signing-related Git config sections; otherwise, if `SSH_PRIVATE_KEY_ED25519` is set, writes that key into `~/.ssh`
-5. On Ona hosts, starts a background watcher that returns ownership of files under `~vscode/.claude` to the `vscode` user
-6. Ensures Zsh is listed in `/etc/shells` and sets it as the login shell (`chsh`)
+4. Links each Claude skill from [`claude/skills/`](claude/skills/) into `~/.claude/skills/` (**removing any same-named skill already there**; other local skills are left alone)
+5. In Codespaces, strips signing-related Git config sections; otherwise, if `SSH_PRIVATE_KEY_ED25519` is set, writes that key into `~/.ssh`
+6. On Ona hosts, starts a background watcher that returns ownership of files under `~vscode/.claude` to the `vscode` user
+7. Ensures Zsh is listed in `/etc/shells` and sets it as the login shell (`chsh`)
 
 ### What gets linked
 
@@ -38,6 +39,8 @@ The `shell/` Stow package maps these files into `~/`:
 | `shell/.gitconfig` | `~/.gitconfig` |
 | `shell/.gitignore_global` | `~/.gitignore_global` |
 | `shell/.asdfrc` | `~/.asdfrc` |
+
+The `claude/skills` Stow package links each skill directory into `~/.claude/skills/` (per-skill symlinks, not one folded directory link), so Claude Code picks the skills up as personal skills on every machine while locally created skills can live alongside them. Because the links point into the repo, editing a skill through `~/.claude/skills/` edits the repo's working tree.
 
 ### Assumptions
 

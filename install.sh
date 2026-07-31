@@ -44,6 +44,20 @@ done
 
 stow shell --target ~/
 
+# --- Claude skills -----------------------------------------------------------
+
+echo "Linking Claude skills..."
+mkdir -p ~/.claude/skills
+
+# Remove anything that would collide with the skills Stow package; skills not
+# in the package are left alone.
+for skill in claude/skills/*/; do
+  rm -rf ~/.claude/skills/"$(basename "$skill")"
+done
+
+stow skills --dir claude --target ~/.claude/skills
+echo "...Claude skills linked!"
+
 # --- Environment-specific credentials / Codespaces --------------------------
 
 if [ "$CODESPACES" = "true" ]; then
