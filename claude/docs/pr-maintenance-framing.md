@@ -1,0 +1,322 @@
+# PR Maintenance Skill System: Conceptual Framing
+
+Design rationale and settled decisions for the skills that keep the user's open
+PRs healthy — plus the whole-system map across both skill clusters.
+The audience is someone reasoning about the design of these skills — future-you
+revising them, or an LLM helping with revisions. The SKILL.md files serve the
+agent doing the work. Companion doc:
+[`atomic-commits-framing.md`](atomic-commits-framing.md) covers the
+atomic-commits cluster (`planning-commits` / `committing-changes` /
+`replanning-branches`) in depth; this doc does not restate it.
+
+## What we're building
+
+Two skills:
+
+- **maintaining-prs** — orchestration, triage, and repair of the user's open
+  PRs: which PRs are in scope (opt-in by label), how watching is organized
+  (root scheduler spawning one agent per stack), what authorizes a change
+  (exactly three triggers), and the single standard procedure that performs
+  every change.
+- **rewriting-history** — execution doctrine for mutating git history safely:
+  history discipline, lease-pinned force-pushing, worktree isolation,
+  stacked-branch rebasing, conflict-resolution heuristics. Extracted from
+  `maintaining-prs`'s original Git Methods appendix; shared by both clusters
+  and triggered directly by ad-hoc mutation requests.
+
+## The whole-system map
+
+Five skills, two clusters, one shared executor:
+
+| Skill | Cluster | Role |
+| --- | --- | --- |
+| `planning-commits` | atomic commits | plans forward work and fix placement; owns atomicity doctrine |
+| `replanning-branches` | atomic commits | plans the re-decomposition of committed history |
+| `committing-changes` | atomic commits | executes a single forward commit |
+| `maintaining-prs` | PR maintenance | watches, triages, and repairs open PRs |
+| `rewriting-history` | shared executor | executes history mutation safely, for any caller |
+
+The clusters split by **concern, not by time**: the atomic-commits cluster owns
+the shape of commit history (what the commits should be); the PR-maintenance
+cluster owns PR health (CI, conflicts, review flow, delegation boundaries). A
+PR-maintenance session always *starts* from a published branch, but the split is
+not a pipeline — whenever a repair touches code, the commit-shape question
+re-arises and the atomic-commits skills govern it. The phase split (planning vs
+execution) applies across both clusters — `rewriting-history` is the
+mutation-side counterpart of `committing-changes`, an executor with doctrine
+but no opinions about what the end state should be.
+
+Delegation edges:
+
+- `committing-changes` → `planning-commits` (diff isn't atomic; needs a plan)
+- `replanning-branches` → `planning-commits` (atomicity criteria),
+  → `committing-changes` (single-commit execution),
+  → `rewriting-history` (mutation mechanics)
+- `maintaining-prs` → `planning-commits` (shape of any repair: squash vs new
+  commits), → `committing-changes` (new commits during a repair),
+  → `rewriting-history` (mutation mechanics)
+- `rewriting-history` also fires directly on ad-hoc mutation asks ("rebase this
+  onto main", "squash these fixups", "resolve this conflict") with no parent
+  skill active
+
+## maintaining-prs
+
+**Scope:** Keeping the user's open PRs green — clean history, resolved
+conflicts, passing CI — without overstepping into decisions that belong to the
+user. Its subject is published branches, but it never decides what a branch's
+commits should be — the shape of any repair is delegated to the atomic-commits
+skills.
+
+**Owns:**
+- Opt-in scope via the `maintained-by:agent` label; the label is the user's
+  delegation and only the user touches it
+- The two-layer orchestration model: root agent as pure scheduler and sole
+  voice to the user; one stack agent per stack doing all real work
+- The stack as the unit of ownership and mutation (singleton stacks for
+  independent PRs)
+- The three triggers (confirmed-real red CI, conflicts/dirty history,
+  qualifying review feedback) and their triage doctrine
+- The standard change procedure — the only path that mutates git — and its
+  mandatory report template
+- The 👍-as-delegation rule for third-party review comments
+- The hard boundary: merging, auto-merge, and draft promotion are never in
+  scope; the terminal state is *green and reported*
+- The Stack Topology Reconstruction appendix (GitHub-specific, single-consumer)
+
+**Explicitly does not own:**
+- Git mutation mechanics (`rewriting-history`)
+- What a branch's commit sequence should be (`planning-commits` /
+  `replanning-branches`)
+- Merge-state changes or draft promotion (nobody — reserved to the user)
+
+## rewriting-history
+
+**Scope:** How to execute a history mutation safely, for any caller. Doctrine,
+not sequence design.
+
+**Owns:**
+- History discipline (rebase-not-merge; squash fixes into the commit they fix)
+- Safe force-pushing (`--force-with-lease`, lease pinned to the inspected SHA)
+- Working-tree hygiene (isolated worktrees; reset before rebase)
+- Stacked-branch rebasing (`--onto` after a parent merges)
+- Conflict-resolution heuristics (append-append, follow-the-deletion,
+  marker greps, pre-push hook as arbiter)
+
+**Explicitly does not own:**
+- Atomicity and commit-sequence design (`planning-commits`,
+  `replanning-branches`)
+- Forward commits (`committing-changes`)
+- When a mutation is *authorized* — callers decide that (`maintaining-prs`'s
+  triggers, the user's ad-hoc request); this skill only governs execution
+
+**Triggers:** any imminent history rewrite or conflict resolution — ad-hoc
+requests included — and invocation from `maintaining-prs` or
+`replanning-branches` at their mutation steps.
+
+## Key concepts encoded in this cluster
+
+**Label as delegation.** A PR is in scope iff authored by the user *and*
+labeled `maintained-by:agent`. The default for every PR is untouched; the label
+is an explicit, revocable, user-only grant. Scope changes are handled like
+topology changes (respawn, don't mutate the agent).
+
+**Stack as the unit of ownership and mutation.** Rebasing any PR in a stack
+requires rebasing from the stack's base, so the stack is the natural mutation
+unit — and one owner per stack means no locking anywhere in the system. Mixed
+stacks (some PRs unlabeled) are watch-only: the cascade must be able to push
+every branch it moves.
+
+**Three triggers only.** Red CI (after triage confirms it's real and
+blocking), conflicts/dirty history, and qualifying review feedback. Everything
+else — including `UNKNOWN` mergeability, non-blocking failures, and
+human-gated checks — is watch-and-report, not change.
+
+**👍 as the delegation signal.** The user's own comments are instructions;
+anyone else's are actionable only once the user reacts with a 👍. Silence for
+non-qualifying comments — no "I'm not authorized" replies. Agents self-identify
+when replying and never resolve threads.
+
+**One mutation path.** Every trigger funnels into the same standard change
+procedure: isolate in a worktree, cascade-rebase base-to-tip unconditionally,
+apply the change in the shape `planning-commits` decided (squash, new commit,
+or a mix), validate, lease-pinned push of changed SHAs only, mandatory report.
+No ad-hoc mutations exist in this system.
+
+**Green and reported, never merged.** The workflow's terminal state stops one
+step short of the user's decisions: merging, arming auto-merge, and promoting
+drafts are permanently out of scope.
+
+## Conventions
+
+- **Placement test for new content (skill vs doc vs bundled reference).**
+  First ask: who reads it, at which moment? Content the *agent needs at a
+  moment of work* lives in skill-space; content a *maintainer needs when
+  redesigning* lives in `claude/docs/`. Within skill-space: it becomes its
+  **own skill** iff it has a trigger moment of its own (a moment of work where
+  it's needed and no parent skill is active), ideally with multiple consumers;
+  otherwise it stays a **bundled reference** inside its single consumer.
+  Rationale: docs have no loading mechanism — nothing fires them — so operative
+  guidance must live where a trigger can reach it. A new skill costs a
+  classifier slot (every description loads every session), so it must earn the
+  trigger.
+- **Naming:** the gerund-form rule from the atomic-commits framing doc is
+  repo-wide (verb + -ing + object; plural where countable, bare where
+  uncountable). Hence `maintaining-prs` and `rewriting-history`.
+- **Repo-agnostic appendix style:** sections intended for possible extraction
+  are written self-contained — no cluster vocabulary, no repo assumptions — so
+  they can be lifted out as a skill without edits. This is how
+  `rewriting-history` was born; `maintaining-prs`'s Stack Topology appendix
+  keeps the same property.
+- **Repo specifics are quarantined and labeled.** Environment-specific facts
+  (hook names, known flakes, branch prefixes) live in a clearly marked
+  "verify before relying on this" section, never woven into the doctrine.
+
+## Source material
+
+Unlike the atomic-commits cluster, no published articles anchor these skills.
+The content is practitioner experience from real PR-maintenance and
+re-decomposition sessions: the triage heuristics, the flake cross-referencing,
+the lease-pinning rule, and the 👍 delegation convention all come from observed
+failure modes, not literature.
+
+## How to engage
+
+- **Push back on scope creep across the delegation edges.** Pressure points:
+  mutation mechanics drifting back into `maintaining-prs` or
+  `replanning-branches` (they cite `rewriting-history`, they don't restate
+  it); triage doctrine drifting into `rewriting-history` (it executes, it
+  doesn't authorize); merge/promotion capabilities drifting into scope at all.
+- **Keep the report template mandatory.** Its fields exist because each one
+  answers a question the user otherwise has to ask; trimming it re-opens those
+  questions.
+
+---
+
+## Appendix: Decisions log
+
+Decisions captured with reasoning so future sessions don't re-litigate them.
+
+**PR maintenance is its own cluster, split from atomic commits by concern —
+not by time.**
+Different concerns (PR health: CI, conflicts, review flow, delegation
+boundaries vs commit shape: atomicity, decomposition) and different trigger
+moments. *Originally labeled pre-push vs post-push; revised:*
+`replanning-branches` already operates on pushed branches, and maintenance
+repairs re-enter commit shaping through delegation, so a time axis
+misdescribes both clusters. The clusters compose as a loop, not a pipeline;
+the concern split composes with — and does not revise — the phase and
+workflow-mode axes established in the atomic-commits framing doc.
+
+**Repair shape is planner-decided, executor-executed — always.**
+The draft skill always squashed fixes into an existing commit: the common case
+written down as the only case. But a 👍'd review request can be a genuinely
+new atomic unit, and squashing it into an unrelated commit breaks the revert
+test. Step 3 of the change procedure now consults `planning-commits` for
+disposition — correction (squash), new unit (forward commit), or a mix — and
+executes each part with its owning executor (`rewriting-history` for squashes,
+`committing-changes` for new commits). "Always consult the planner" follows
+the same rationale as "`planning-commits` always fires in plan mode": a
+trivial disposition costs nothing to decide explicitly, and a triviality
+threshold would blur the trigger. `planning-commits` (not
+`replanning-branches`) is the planner because fix placement is incremental
+revision of an existing sequence, not re-decomposition of a branch.
+
+**Git Methods extracted into `rewriting-history` as its own skill.**
+Access is identical either way (skills and bundled references are both files
+on disk), so the decision reduces to whether the content deserves an
+autonomous trigger. Three tests said yes: the *orphan-moment* test (ad-hoc
+rebases and conflict resolutions happen with no parent skill active — bundled
+content would never load there), the *drift* test (doctrine maintained inside
+a PR-maintenance skill institutionalizes wrong-owner edits), and the
+*dead-weight* test (`maintaining-prs` loads for watch-only sessions where
+mutation doctrine is ballast). Extraction also extends the cluster's validated
+single-owner pattern rather than inventing a new mechanism. *Revisit if the
+skill misfires on branch-reshaping asks (where `replanning-branches` should
+lead) or fails to fire on ad-hoc rebases.*
+
+**The placement test is recorded as a repo-wide convention.**
+The extraction decision generalized cleanly (audience/moment first, then
+trigger-of-its-own), so it's captured under Conventions above for the next
+"skill or doc?" question rather than being re-derived.
+
+**Stack Topology Reconstruction stays bundled in `maintaining-prs`.**
+It fails the multiple-consumers half of the placement test: GitHub- and
+`gh`-specific, with exactly one consumer. It keeps the repo-agnostic
+lift-without-edits style. Revisit if a second consumer appears (e.g. a future
+stacked-PR authoring skill).
+
+**Renamed `pr-babysitting` → `babysitting-prs` → `maintaining-prs`.**
+Two steps. The first was mechanical: the gerund-form rule in the atomic-commits
+decisions log requires verb-first slugs, and the draft name was object-first.
+The second was word choice: "babysitting" was informal register the user
+disliked, and `maintaining-prs` aligns with vocabulary the system had already
+committed to — the `maintained-by:agent` scope label, the PR-maintenance
+cluster name, and this doc's filename. "Babysit" stays in the skill
+description as trigger vocabulary, since it's what the user actually says.
+*Nuance to revisit:* the skill name is now nearly the cluster's name, which
+the naming convention warns about ("a skill's name describes its own scope,
+never the cluster it serves"). Harmless while this is the cluster's only core
+skill — the name genuinely describes its own scope — but reconsider if the
+cluster grows a sibling.
+
+**`rewriting-history` kept, despite sounding odd out of context.**
+It is git's own term of art — the Pro Git chapter covering amend, rebase, and
+filter-branch is titled "Rewriting History" — and term-of-art names match what
+users actually type, which is what triggering needs. The runner-up,
+`mutating-history`, matched this doc's internal vocabulary ("mutation
+mechanics", "history mutation") but lost to external convention.
+`reshaping-history` was rejected outright: "re-shaping committed history" is
+`replanning-branches`' established phrase, and reusing it would blur the
+planner/executor boundary.
+
+**One framing doc covers the cluster plus the whole-system map.**
+The cross-cluster ownership map (five skills, delegation edges) needs a home,
+and a third "system overview" doc would split the audience's attention.
+This doc holds the map; `atomic-commits-framing.md` remains the in-depth
+reference for its own cluster, unmodified.
+
+**Scope is opt-in via label; the agent never touches the label.**
+The default posture for any PR is *untouched*. Watching and (especially)
+force-pushing someone's branch is delegation that must be granted explicitly
+and revocably, PR by PR — a label is visible in the GitHub UI, auditable, and
+removable by the user without talking to the agent.
+
+**Exactly three triggers; everything else is watch-only.**
+An agent with push access needs a closed list of things that authorize a
+mutation, not judgment calls. The triage doctrine exists to shrink false
+positives (staleness, flakes, non-blocking checks, `UNKNOWN` mergeability);
+the closed list exists to make false positives the only possible failure mode
+— an unauthorized *kind* of action can't happen if it isn't on the list.
+
+**Merging and draft promotion are permanently out of scope.**
+The terminal state is *green and reported*. Merging is the one action whose
+consequences the user can't undo by re-pushing a branch, and promotion changes
+who gets notified and asked to review — both are the user's calls by
+construction, not by configuration.
+
+## Open questions
+
+- **The "Repo/environment specifics" section of `maintaining-prs` carries
+  another repo's facts** — an Oxlint pre-push hook, `yarn install`, a
+  `test-remainder-*` OOM flake, named human-gated checks, and a `wrhall/*`
+  branch prefix that doesn't match this dotfiles' user. Generalize into a
+  "how to record repo specifics" pattern, relocate to per-repo config, or keep
+  as a worked example? Unresolved; the section is quarantined and labeled in
+  the meantime.
+- **Should `replanning-branches`' mutation mechanics migrate to
+  `rewriting-history`?** Its co-author-trailer `rebase --exec` appendix and
+  backup-branch-before-reorder rule are execution doctrine, arguably
+  `rewriting-history`'s territory. Left in place for now to keep this change
+  minimal; decide deliberately, per the how-to-engage rule.
+- **`maintaining-prs` doubles as an agent-architecture spec** (root scheduler,
+  headless background stack agents). How does it degrade on surfaces without
+  background agents — does the doctrine still apply single-threaded, and
+  should the skill say so?
+- **Does the trigger partition hold in practice?** "Rebase this branch" should
+  route to `rewriting-history` (mechanics), "clean up this branch's commits"
+  to `replanning-branches` (sequence design), "fix my PR" to `maintaining-prs`
+  (triage first). Watch for misfires; the descriptions encode the partition
+  but classifiers are probabilistic.
+- **Do the label name (`maintained-by:agent`) and the 👍 convention generalize
+  across repos and teams**, or do they need per-repo configuration the way the
+  environment-specifics section does?

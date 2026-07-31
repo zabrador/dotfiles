@@ -35,10 +35,12 @@ The boundary between levels 1 and 2 is **shippability to users**. Feature planni
 - Recognition of the "this task is actually a feature, slice it first" signal
 - Recognition of when a commit-assignment problem is a software-design problem in disguise
 - The commit plan: produced up front, revised when execution diverges, created post-hoc when none existed
+- Fix disposition: placing a late change into an existing commit sequence (squash into the commit it corrects vs. a new commit) — added when `maintaining-prs` adopted planner-decided repair shape; see `pr-maintenance-framing.md`
 
 **Triggers:**
 - Plan mode is active — any change Claude is planning, trivial or not
 - `committing-changes` defers because the current diff isn't atomic
+- A late fix must be placed into an existing commit sequence (e.g. from `maintaining-prs`'s change procedure)
 - User explicitly asks to plan, split, reorganize, or clean up commits
 
 ## committing-changes

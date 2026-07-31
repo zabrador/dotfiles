@@ -5,7 +5,7 @@ description: Re-plan an existing committed branch into a clean atomic commit seq
 
 This skill handles re-shaping an existing committed branch into a clean sequence of atomic commits on a fresh branch off the merge-base. It operates one step removed from `planning-commits`: same atomicity criteria, same decomposition heuristics, but with workflow-specific patterns that only matter when the starting point is committed history rather than uncommitted work.
 
-The companion skills handle the parts this one delegates. `planning-commits` owns the conceptual definition of atomicity (the principle, the generative move, the verification criteria) and the general decomposition heuristics (refactor → feature → cleanup, vertical/horizontal slicing). `committing-changes` owns single-commit execution. This skill provides the workflow framing and the patterns specific to re-decomposition.
+The companion skills handle the parts this one delegates. `planning-commits` owns the conceptual definition of atomicity (the principle, the generative move, the verification criteria) and the general decomposition heuristics (refactor → feature → cleanup, vertical/horizontal slicing). `committing-changes` owns single-commit execution. `rewriting-history` owns the mechanics of mutating history safely — worktree isolation, safe force-pushing, conflict resolution; consult it before the rebase and cherry-pick work this skill plans. This skill provides the workflow framing and the patterns specific to re-decomposition.
 
 ## Default to a fresh branch off the merge-base
 

@@ -1,6 +1,6 @@
 ---
 name: planning-commits
-description: Plan the decomposition of coding work into atomic git commits. Use this skill whenever plan mode is active (trivial or not — a trivial change produces a single-commit plan), when mid-work changes have started spanning multiple concerns, when asked to split or reorganize commits, when a working tree is tangled and needs to be separated into discrete commits, or when the committing-changes skill needs help because a diff isn't atomic. Also use whenever the user mentions atomic commits, commit decomposition, or asks how to structure a sequence of commits.
+description: Plan the decomposition of coding work into atomic git commits. Use this skill whenever plan mode is active (trivial or not — a trivial change produces a single-commit plan), when mid-work changes have started spanning multiple concerns, when asked to split or reorganize commits, when a working tree is tangled and needs to be separated into discrete commits, when a late fix must be placed into an existing commit sequence (squash into the commit it corrects vs. a new commit — e.g. during PR maintenance), or when the committing-changes skill needs help because a diff isn't atomic. Also use whenever the user mentions atomic commits, commit decomposition, or asks how to structure a sequence of commits.
 ---
 
 This skill handles the planning and decomposition of coding work into atomic git commits. It operates at the implementation-planning altitude: given a task that is about to be worked on (or was just completed without commits being made along the way), it produces the sequence of atomic commits that will land the work cleanly.
@@ -64,6 +64,29 @@ Plans drift on contact with code. When the current diff no longer matches the ne
 The question to ask when revising is the generative one: *what would make the next change small?* If the answer points to an enabling refactor that hasn't been done yet, that refactor becomes the next commit, not the feature work itself.
 
 This avoids the most common failure mode: accumulating a large batch of changes and then trying to split them apart. Tangled working trees resist clean separation in ways that are much easier to prevent than to fix.
+
+## Placing a fix into an existing commit sequence
+
+Sometimes a small change arrives after a commit sequence already exists — a
+review fix, a bug found while a PR is being maintained, a follow-up to work
+already committed. The planning question is disposition: does this change
+**correct** one of the existing commits, or is it a **new atomic unit**?
+
+- **Correction** — the revert test decides. If reverting commit N should take
+  this change with it (it fixes, completes, or adjusts what N's message
+  claims), the change belongs inside N. Execution is a squash; the
+  `rewriting-history` skill owns the mechanics.
+- **New unit** — if the change does something no existing commit's message
+  claims (new behavior, a review-requested addition), it is its own commit with
+  its own message, executed via `committing-changes`. Squashing it into an
+  unrelated commit makes that commit dishonest and breaks the revert test.
+- **Mixed** — split it: squash the corrective part, commit the new part
+  separately.
+
+This is plan revision in miniature, and no triviality threshold applies — as
+with plan mode, a trivial disposition costs nothing to decide explicitly.
+Placing a single fix stays this skill's territory; `replanning-branches` takes
+over only when the task is reshaping a branch's whole sequence.
 
 ## When the commit boundary is really a design question
 
