@@ -53,6 +53,10 @@ this is how to get there without losing work or clobbering anyone else's.
 - **Reset before you rebase.** If the local branch may be stale or divergent from the
   remote, hard-reset it to `origin/<branch>` first so you are rebasing what actually
   exists on the remote, not a local fork of it.
+- **Branch a backup before destructive reorders.** Before resetting and replaying
+  commits in a different order — or any operation that discards the current
+  sequence — preserve the current state with `git branch <name>-backup` so the
+  original remains available for reference.
 
 ## Stacked branches
 
@@ -73,3 +77,28 @@ this is how to get there without losing work or clobbering anyone else's.
   committed is worse than one that stops.
 - **Use the project's pre-push validation hook (if any) as the final arbiter** that
   a resolution is complete — a clean hook run beats eyeballing the diff.
+
+## Co-author trailers across rewritten history
+
+When every commit on a rewritten branch should carry co-author trailers (e.g.
+crediting the branch's original author and an AI assistant):
+
+```
+git rebase <base> --exec '
+  git commit --amend --no-edit \
+    --trailer "Co-Authored-By: <Original Author> <author@email>" \
+    --trailer "Co-Authored-By: <AI Assistant> <noreply@example.com>"
+'
+```
+
+Notes:
+
+- `--exec` runs after each commit is replayed, amending it to add the trailers
+  without changing the message.
+- `--no-edit` is critical — without it, an editor opens for every commit.
+- For GitHub attribution to link to the original author's account, the email
+  must match what's registered with their GitHub identity. The most reliable
+  choice is the email they used in the original commits:
+  `git log --format='%an <%ae>' <original-branch> -1`.
+- Safe on local-only branches. Shared branches require a force-push — see
+  Safe force-pushing above.

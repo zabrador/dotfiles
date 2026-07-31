@@ -101,6 +101,8 @@ not sequence design.
 - Stacked-branch rebasing (`--onto` after a parent merges)
 - Conflict-resolution heuristics (append-append, follow-the-deletion,
   marker greps, pre-push hook as arbiter)
+- Backup branches before destructive reorders, and co-author trailers across
+  rewritten history (both migrated from `replanning-branches`)
 
 **Explicitly does not own:**
 - Atomicity and commit-sequence design (`planning-commits`,
@@ -306,13 +308,17 @@ learn per repo — each category is the generalized residue of one original
 fact — plus an instruction to record findings in the target repo's own Claude
 config. The original facts were handed back to the user to relocate.
 
+**`replanning-branches`' mutation mechanics migrated to `rewriting-history`.**
+*Resolves a former open question.* The co-author-trailer `rebase --exec`
+mechanic and the backup-branch-before-destructive-reorder rule were execution
+doctrine living in a planner — the exact drift the how-to-engage section warns
+about. No argument for keeping them surfaced: the trailer mechanic is
+repo-agnostic git execution with a plausible ad-hoc trigger of its own
+("credit Alice on these commits"), and the backup rule generalizes to any
+destructive reorder. `replanning-branches` now cites both.
+
 ## Open questions
 
-- **Should `replanning-branches`' mutation mechanics migrate to
-  `rewriting-history`?** Its co-author-trailer `rebase --exec` appendix and
-  backup-branch-before-reorder rule are execution doctrine, arguably
-  `rewriting-history`'s territory. Left in place for now to keep this change
-  minimal; decide deliberately, per the how-to-engage rule.
 - **`maintaining-prs` doubles as an agent-architecture spec** (root scheduler,
   headless background stack agents). How does it degrade on surfaces without
   background agents — does the doctrine still apply single-threaded, and

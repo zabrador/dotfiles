@@ -74,7 +74,6 @@ The boundary between levels 1 and 2 is **shippability to users**. Feature planni
 - Functional-equivalence-not-byte-equivalence as the verification standard
 - The importer-before-exporter ordering rule and its verification policy (scoped typecheck at layer boundaries, especially after export removals)
 - The "behavior-preserving can be loose" honesty rule when migrations inherently change behavior
-- The co-author-trailer-amend mechanic for crediting original authors across rewritten history
 
 **Triggers:**
 - User asks to re-decompose, restructure, redo commits, or clean up history on an existing branch
@@ -87,6 +86,7 @@ The boundary between levels 1 and 2 is **shippability to users**. Feature planni
 - Single-commit execution (`committing-changes`)
 - Foundational vs layered as a design question — escalation territory inside `planning-commits`'s "When the commit boundary is really a design question" section
 - In-place rebase plus force-push of shared branches — separate workflow, separate confirmations, not the default this skill produces
+- Mutation-execution mechanics — worktree isolation, backup branches, co-author trailers across rewritten history (`rewriting-history`; migrated when the PR-maintenance cluster introduced that skill — see `pr-maintenance-framing.md`)
 
 ## Workflow
 

@@ -70,7 +70,7 @@ Per-commit verification is ideal but slow. A pragmatic rule:
 - Run it explicitly **at any commit that removes or restructures a previously exported identifier** — that's where the importer-before-exporter hazard concentrates.
 - Run unit tests where they apply, but don't trust them for typecheck-only failures (test files often don't import the affected code paths).
 
-When a violation is found mid-stream, the fix is reorder, not patch. Reset to the last good commit and apply commits in the corrected order. Preserve the broken state in a backup branch first (`git branch <name>-backup`) so the original sequence remains available for reference.
+When a violation is found mid-stream, the fix is reorder, not patch. Preserve the broken state in a backup branch first (per `rewriting-history`'s backup rule), then reset to the last good commit and apply commits in the corrected order.
 
 ## "Behavior-preserving" can be loose
 
@@ -91,6 +91,7 @@ Be honest in the commit message. Use `refactor:` only when user-visible behavior
 - **Single-commit execution.** Once the plan is in place, each commit is executed via `committing-changes` — staging hunks (`git add -p`), writing the Conventional Commits message, running `git commit`.
 - **Foundational vs layered as a design question.** When deciding whether a behavior is intrinsic to the abstraction or per-consumer, that's software design, not re-decomposition. `planning-commits` flags this escalation.
 - **In-place rebase plus force-push of shared branches.** Separate workflow, separate confirmations. Not the default this skill produces.
+- **Mutation-execution mechanics.** Worktree isolation, safe force-pushing, backup branches before destructive reorders, co-author trailers across rewritten history — all `rewriting-history`.
 
 ## What to avoid
 
@@ -100,21 +101,4 @@ Be honest in the commit message. Use `refactor:` only when user-visible behavior
 - **Don't** remove an exported identifier in a commit before all later commits' importers have migrated. Reorder so importers move first.
 - **Don't** call a commit a `refactor:` when the migration itself changes user-visible behavior. Be honest in the body.
 
-## Appendix: Co-author trailers across rewritten history
-
-When the user wants every commit on the new branch to carry co-author trailers (e.g. crediting the original branch's author and an AI assistant):
-
-```
-git rebase <merge-base> --exec '
-  git commit --amend --no-edit \
-    --trailer "Co-Authored-By: <Original Author> <author@email>" \
-    --trailer "Co-Authored-By: <AI Assistant> <noreply@example.com>"
-'
-```
-
-Notes:
-
-- `--exec` runs after each commit is replayed, amending it to add the trailers without changing the message.
-- `--no-edit` is critical — without it, an editor opens for every commit.
-- For GitHub attribution to link to the original author's account, the email must match what's registered with their GitHub identity. The most reliable choice is the email they used in the original branch's commits: `git log --format='%an <%ae>' <original-branch> -1`.
-- Safe on local-only branches. Shared branches require a force-push, which carries the in-place rewrite risks called out in the fresh-branch section.
+When the user wants the rewritten branch's commits to credit the original authors, use `rewriting-history`'s co-author-trailer mechanic.
