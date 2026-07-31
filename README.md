@@ -25,7 +25,8 @@ The installer:
 2. Clones [Antigen](https://github.com/zsh-users/antigen) into `~/.antigen` if missing
 3. **Removes any existing home-directory files** that would collide with the Stow package, then links the package with Stow
 4. In Codespaces, strips signing-related Git config sections; otherwise, if `SSH_PRIVATE_KEY_ED25519` is set, writes that key into `~/.ssh`
-5. Ensures Zsh is listed in `/etc/shells` and sets it as the login shell (`chsh`)
+5. On Ona hosts, starts a background watcher that returns ownership of files under `~vscode/.claude` to the `vscode` user
+6. Ensures Zsh is listed in `/etc/shells` and sets it as the login shell (`chsh`)
 
 ### What gets linked
 
@@ -42,6 +43,7 @@ The `shell/` Stow package maps these files into `~/`:
 
 - Local (non-SSH) sessions use `code-insiders` as `$EDITOR` and as Git's diff/merge tool
 - On Ona hosts, secrets from `/etc/profile.d/ona-secrets.sh` are sourced into Zsh
+- On Ona hosts, Ona's Claude integration writes root-owned files into `~vscode/.claude`; [`ona/fix-claude-remote-ownership.sh`](ona/fix-claude-remote-ownership.sh) watches the directory (via `inotifywait`, installed on demand) and hands ownership back to `vscode`
 
 ## Claude
 
