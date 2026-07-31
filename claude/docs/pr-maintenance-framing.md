@@ -59,6 +59,19 @@ Delegation edges:
   onto main", "squash these fixups", "resolve this conflict") with no parent
   skill active
 
+Routing, by ask — the utterance and the skill that should lead:
+
+- "Rebase this onto main", "squash these fixups", "resolve this conflict",
+  "force-push this safely" → `rewriting-history`: the shape is already known;
+  only execution is needed.
+- "Clean up this branch's commits", "split this into atomic commits", "redo
+  this branch's history" → `replanning-branches` (committed history) or
+  `planning-commits` (uncommitted working tree).
+- "Fix my PR", "why is CI red", "watch my PRs", "address the review comments"
+  → `maintaining-prs`: triage precedes any mutation, and mutation happens only
+  through its change procedure.
+- "Commit this" → `committing-changes`.
+
 ## maintaining-prs
 
 **Scope:** Keeping the user's open PRs green — clean history, resolved
@@ -317,17 +330,22 @@ repo-agnostic git execution with a plausible ad-hoc trigger of its own
 ("credit Alice on these commits"), and the backup rule generalizes to any
 destructive reorder. `replanning-branches` now cites both.
 
+**Trigger routing is encoded, not just hoped for.**
+The skill descriptions carry not-this-skill signals at the known confusion
+points (`maintaining-prs` no longer claims "rebase a branch";
+`replanning-branches` disclaims plain rebases), and the whole-system map
+records ask→skill routing. What remains is empirical — see Open questions.
+
 ## Open questions
 
 - **`maintaining-prs` doubles as an agent-architecture spec** (root scheduler,
   headless background stack agents). How does it degrade on surfaces without
   background agents — does the doctrine still apply single-threaded, and
   should the skill say so?
-- **Does the trigger partition hold in practice?** "Rebase this branch" should
-  route to `rewriting-history` (mechanics), "clean up this branch's commits"
-  to `replanning-branches` (sequence design), "fix my PR" to `maintaining-prs`
-  (triage first). Watch for misfires; the descriptions encode the partition
-  but classifiers are probabilistic.
+- **Does the trigger partition hold in practice?** The descriptions now carry
+  not-this-skill signals and the system map records ask→skill routing; what
+  remains is empirical. Watch real sessions for misfires — especially "rebase"
+  asks landing on the wrong side of the mechanics vs sequence-design line.
 - **Do the label name (`maintained-by:agent`) and the 👍 convention generalize
   across repos and teams**, or do they need per-repo configuration the way the
   environment-specifics section does?

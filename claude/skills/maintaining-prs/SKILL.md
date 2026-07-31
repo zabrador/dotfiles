@@ -4,8 +4,9 @@ description: >
   Rules and methods for maintaining, fixing, and shepherding the user's open PRs
   to green — rebasing broken branches, resolving conflicts, diagnosing CI failures,
   and orchestrating background watchers. Use this skill whenever asked to fix a PR,
-  rebase a branch, investigate red CI, update a stacked PR after its parent merged,
-  or "babysit"/watch PRs. Also consult it before any GitHub write on the user's
+  investigate red CI, update a stacked PR after its parent merged, or
+  "babysit"/watch PRs. A plain rebase request outside any PR-maintenance context
+  is rewriting-history's territory, not this skill's. Also consult it before any GitHub write on the user's
   behalf. The mechanics of git mutation itself (rebase, amend, force-push,
   conflict resolution) are owned by the rewriting-history skill, and the shape
   of any repair (squash into an existing commit vs. new commits) is decided by
