@@ -182,6 +182,11 @@ drafts are permanently out of scope.
   they can be lifted out as a skill without edits. This is how
   `rewriting-history` was born; `maintaining-prs`'s Stack Topology appendix
   keeps the same property.
+- **Collection-level labels live in the plugin name.** Skill slugs describe
+  their own scope; framing-doc titles name their cluster; the plugin name
+  (`zabrabot`) is the home for the collection-as-a-whole label. It is
+  scope-neutral by design — plugin names are effectively immutable once
+  installed, and the collection will outgrow any topical label.
 - **Repo specifics live in the target repo, not the skill.** Skills carry only
   the *categories* of environment facts to learn (validation hook, worktree
   bootstrap, known flakes, human-gated checks, branch conventions); the facts
@@ -329,6 +334,20 @@ about. No argument for keeping them surfaced: the trailer mechanic is
 repo-agnostic git execution with a plausible ad-hoc trigger of its own
 ("credit Alice on these commits"), and the backup rule generalizes to any
 destructive reorder. `replanning-branches` now cites both.
+
+**Plugin distribution: one brand-named plugin (`zabrabot`) under an owner
+marketplace (`zabrador`).**
+The repo doubles as a plugin marketplace, with `claude/` as the plugin root
+via a relative source path — nothing moved. One plugin rather than
+per-cluster plugins: the distribution unit matches the stow channel (the
+whole collection), and adding topical plugins to the marketplace later is
+free if selective installation ever matters. Brand-named rather than topical:
+plugin names are effectively immutable once installed (a rename forces a
+settings migration), automatic triggering never sees the prefix (skill
+descriptions drive it), and the collection will outgrow any topical name.
+The plugin channel serves other people; the stow channel serves the user's
+own machines. Installing both on one machine duplicates every skill (bare
+and namespaced) — don't.
 
 **Trigger routing is encoded, not just hoped for.**
 The skill descriptions carry not-this-skill signals at the known confusion

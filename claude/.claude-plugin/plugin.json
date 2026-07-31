@@ -1,0 +1,9 @@
+{
+  "name": "zabrabot",
+  "description": "An opinionated Claude Code skill collection.",
+  "version": "0.1.0",
+  "author": {
+    "name": "Robert Zablit"
+  },
+  "repository": "https://github.com/zabrador/dotfiles"
+}

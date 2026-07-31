@@ -1,0 +1,14 @@
+{
+  "name": "zabrador",
+  "description": "zabrador's Claude Code plugin marketplace.",
+  "owner": {
+    "name": "Robert Zablit",
+    "url": "https://github.com/zabrador"
+  },
+  "plugins": [
+    {
+      "name": "zabrabot",
+      "source": "./claude"
+    }
+  ]
+}

@@ -52,6 +52,20 @@ The `claude/skills` Stow package links each skill directory into `~/.claude/skil
 
 Personal Claude Code configuration.
 
+### Installing the skills
+
+Two channels:
+
+- **As dotfiles:** `install.sh` links each skill into `~/.claude/skills/` (see step 4 above), so the skills ride along wherever the dotfiles are installed, invoked by bare name.
+- **As plugin:** the repo doubles as a Claude Code plugin marketplace, with [`claude/`](claude/) as the plugin root:
+
+  ```
+  /plugin marketplace add zabrador/dotfiles
+  /plugin install zabrabot@zabrador
+  ```
+
+  Plugin skills invoke as `zabrabot:<skill-name>`.
+
 ### Skills
 
 - [`planning-commits`](claude/skills/planning-commits/SKILL.md) — conceptual and decompositional; helps structure work as a sequence of atomic commits.
