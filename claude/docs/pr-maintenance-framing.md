@@ -167,9 +167,11 @@ drafts are permanently out of scope.
   they can be lifted out as a skill without edits. This is how
   `rewriting-history` was born; `maintaining-prs`'s Stack Topology appendix
   keeps the same property.
-- **Repo specifics are quarantined and labeled.** Environment-specific facts
-  (hook names, known flakes, branch prefixes) live in a clearly marked
-  "verify before relying on this" section, never woven into the doctrine.
+- **Repo specifics live in the target repo, not the skill.** Skills carry only
+  the *categories* of environment facts to learn (validation hook, worktree
+  bootstrap, known flakes, human-gated checks, branch conventions); the facts
+  themselves are recorded in each target repo's own Claude config. These
+  dotfiles are public — internal repo details don't belong here.
 
 ## Source material
 
@@ -294,15 +296,18 @@ consequences the user can't undo by re-pushing a branch, and promotion changes
 who gets notified and asked to review — both are the user's calls by
 construction, not by configuration.
 
+**Repo-specific facts live in the target repo's config, not in the skill.**
+*Resolves a former open question.* The draft carried one repo's facts — a
+named pre-push hook, a named infra flake, named human-gated checks, a
+colleague's branch prefix. Two problems: facts rot invisibly when they live
+far from their repo, and these dotfiles are public, so another repo's internal
+operational details leak. The section is now a checklist of categories to
+learn per repo — each category is the generalized residue of one original
+fact — plus an instruction to record findings in the target repo's own Claude
+config. The original facts were handed back to the user to relocate.
+
 ## Open questions
 
-- **The "Repo/environment specifics" section of `maintaining-prs` carries
-  another repo's facts** — an Oxlint pre-push hook, `yarn install`, a
-  `test-remainder-*` OOM flake, named human-gated checks, and a `wrhall/*`
-  branch prefix that doesn't match this dotfiles' user. Generalize into a
-  "how to record repo specifics" pattern, relocate to per-repo config, or keep
-  as a worked example? Unresolved; the section is quarantined and labeled in
-  the meantime.
 - **Should `replanning-branches`' mutation mechanics migrate to
   `rewriting-history`?** Its co-author-trailer `rebase --exec` appendix and
   backup-branch-before-reorder rule are execution doctrine, arguably

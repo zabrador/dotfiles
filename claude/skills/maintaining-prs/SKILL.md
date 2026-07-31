@@ -27,7 +27,8 @@ the companion `rewriting-history` skill.** It owns the general git doctrine —
 history discipline, safe force-pushing, worktree isolation, stacked-branch
 rebasing, conflict-resolution heuristics — and is deliberately self-contained
 and repo-agnostic. This file covers only what is specific to maintaining the
-user's PRs and to this repo.
+user's PRs; repo-specific facts belong in each target repo's own config (see
+"Repo/environment specifics" below).
 
 ## Scope
 
@@ -225,23 +226,26 @@ base to tip**, regardless of which PR triggered it:
 
 ## Repo/environment specifics
 
-These are quirks of this particular repo and infra — verify they still hold before
-relying on them:
+Every repo has facts this workflow depends on that this skill cannot supply.
+Learn them before the first change procedure in a repo, and re-verify each
+session:
 
-- The pre-push Oxlint hook is the conflict-resolution validator here: a clean hook
-  run confirms no un-grandfathered import crossings and no unused
-  `eslint-disable`s.
-- Fresh worktrees have no `node_modules`, so the pre-push Oxlint hook fails with a
-  "node_modules state file" error. Fix: `yarn install` (~3 min). A `node-liblzma`
-  build failure during install is unrelated noise.
-- The `test-remainder-*` OOM (JS-heap exhaustion during the coverage phase when the
-  agent-tools graph is pulled in) is a known infra flake — confirm by cross-referencing
-  other PRs on the same shard.
-- Known **human-gated checks** here: "Escape-hatch" and "Require Identity Admin
-  review" — report as needing a specific human action, never attempt to fix in code.
-- The user's branches are prefixed `wrhall/*` — in topology reconstruction, a
-  `baseRefName` matching that prefix with no open PR on it is the merged-parent
-  signal.
+- **The validation hook.** What pre-push (or equivalent) validation exists — a
+  clean run is the conflict-resolution arbiter (see `rewriting-history`).
+- **Worktree bootstrap.** What a fresh worktree needs before hooks and builds
+  pass (dependency install, generated files), roughly how long it takes, and
+  which install-time errors are unrelated noise.
+- **Known infra flakes.** Failure signatures that recur across unrelated PRs
+  (shard names, error shapes), so flake cross-referencing has priors.
+- **Human-gated checks.** Blocking checks only a specific human action can
+  clear — report them by name, never attempt a code fix.
+- **Branch-naming conventions.** The user's branch prefix, which topology
+  reconstruction uses as its merged-parent signal (a `baseRefName` matching
+  the prefix with no open PR on it).
+
+Record what you learn in the target repo's own Claude config (its CLAUDE.md or
+a checked-in notes file), not in this skill — this file is repo-agnostic and
+travels with the user's dotfiles.
 
 ---
 
