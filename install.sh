@@ -11,6 +11,12 @@ if type "brew" > /dev/null; then
     brew install stow
     echo "...stow installation complete!"
   fi
+
+  if ! type "jq" > /dev/null; then
+    echo "Installing jq..."
+    brew install jq
+    echo "...jq installation complete!"
+  fi
 elif type "apt" > /dev/null; then
   echo "Using apt for installation..."
   sudo apt update
@@ -19,6 +25,12 @@ elif type "apt" > /dev/null; then
     echo "Installing stow..."
     sudo apt install stow
     echo "...stow installation complete!"
+  fi
+
+  if ! type "jq" > /dev/null; then
+    echo "Installing jq..."
+    sudo apt install jq
+    echo "...jq installation complete!"
   fi
 fi
 
@@ -57,6 +69,19 @@ done
 
 stow skills --dir claude/plugin --target ~/.claude/skills
 echo "...Claude skills linked!"
+
+# --- Claude user settings -----------------------------------------------------
+
+echo "Merging Claude user settings baseline..."
+mkdir -p ~/.claude
+[ -s ~/.claude/settings.json ] || echo '{}' > ~/.claude/settings.json
+
+# Buffer through a variable: redirecting jq onto its own input would truncate
+# it before jq reads it. The && means a jq failure never writes.
+settings=$(jq '. * input' ~/.claude/settings.json claude/settings.json) \
+  && printf '%s\n' "$settings" > ~/.claude/settings.json
+
+echo "...Claude user settings baseline merged!"
 # --- Environment-specific credentials / Codespaces --------------------------
 
 if [ "$CODESPACES" = "true" ]; then
