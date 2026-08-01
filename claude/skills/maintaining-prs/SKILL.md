@@ -6,10 +6,10 @@ description: >
   and orchestrating background watchers. Use this skill whenever asked to fix a PR,
   investigate red CI, update a stacked PR after its parent merged, or
   "babysit"/watch PRs. A plain rebase request outside any PR-maintenance context
-  is rewriting-history's territory, not this skill's. Also consult it before any GitHub write on the user's
-  behalf. The mechanics of git mutation itself (rebase, amend, force-push,
-  conflict resolution) are owned by the rewriting-history skill, and the shape
-  of any repair (squash into an existing commit vs. new commits) is decided by
+  is making-git-changes' territory, not this skill's. Also consult it before any GitHub write on the user's
+  behalf. The mechanics of git changes (rebase, amend, force-push, conflict
+  resolution) are owned by the making-git-changes skill, and the shape of any
+  repair (squash into an existing commit vs. new commits) is decided by
   planning-commits.
 ---
 
@@ -24,7 +24,7 @@ The structure mirrors the call hierarchy: **scope** applies to every layer →
 procedure** is the only path that mutates git.
 
 **Before any git mutation (rebase, amend, force-push, conflict resolution), read
-the companion `rewriting-history` skill.** It owns the general git doctrine —
+the companion `making-git-changes` skill.** It owns the general git doctrine —
 history discipline, safe force-pushing, worktree isolation, stacked-branch
 rebasing, conflict-resolution heuristics — and is deliberately self-contained
 and repo-agnostic. This file covers only what is specific to maintaining the
@@ -188,20 +188,21 @@ base to tip**, regardless of which PR triggered it:
    behind and even for trivial changes:
    - Rebase the stack's **base branch** onto latest `origin/main`. If the base's
      parent PR merged, use `git rebase --onto origin/main <parent-tip>` (see
-     `rewriting-history`, "Stacked branches").
+     `making-git-changes`, "Stacked branches").
    - Then rebase each child onto its parent's **new** tip, in order down the stack.
-   - Resolve conflicts per `rewriting-history`'s conflict-resolution heuristics.
+   - Resolve conflicts per `making-git-changes`' conflict-resolution heuristics.
    - If `main` hasn't advanced, upstream rebases produce identical SHAs and
      naturally no-op — only branches at and below the actual change will move.
 3. **Make the change** (if any) at the triggered PR. The shape of the change is
    decided by `planning-commits`, never ad hoc: consult it to determine whether
    the change corrects an existing commit, is one or more new atomic commits,
    or splits into a mix (see its "Placing a fix into an existing commit
-   sequence" section). Execute each part with its owning executor — squashes
-   per `rewriting-history`'s mechanics (`--amend` for HEAD, `--fixup` +
-   `--autosquash` for earlier commits), new commits via `committing-changes` —
-   then continue the cascade through the descendants. Keep adjacent
-   docs/comments in sync with any behavior change, in the same commit.
+   sequence" section). Execute via `making-git-changes` — squashes with
+   `--amend` for HEAD or `--fixup` + `--autosquash` for earlier commits, new
+   commits staged and committed forward — checking every created or modified
+   commit against `crafting-commits`' standard, then continue the cascade
+   through the descendants. Keep adjacent docs/comments in sync with any
+   behavior change, in the same commit.
 4. **Validate** each rebased branch: grep for leftover conflict markers; run the
    pre-push hook clean.
 5. **Push only the branches whose SHAs changed**, each with `--force-with-lease`,
@@ -232,7 +233,7 @@ Learn them before the first change procedure in a repo, and re-verify each
 session:
 
 - **The validation hook.** What pre-push (or equivalent) validation exists — a
-  clean run is the conflict-resolution arbiter (see `rewriting-history`).
+  clean run is the conflict-resolution arbiter (see `making-git-changes`).
 - **Worktree bootstrap.** What a fresh worktree needs before hooks and builds
   pass (dependency install, generated files), roughly how long it takes, and
   which install-time errors are unrelated noise.
@@ -255,7 +256,7 @@ travels with the user's dotfiles.
 The section below is deliberately self-contained and repo-agnostic — no
 PR-maintenance vocabulary, no repo assumptions — so it can be lifted out as its own
 skill without edits. (Git Methods, which used to live here, was lifted out
-exactly that way: it is now the `rewriting-history` skill.)
+exactly that way: it now lives in the `making-git-changes` skill.)
 
 ## Stack Topology Reconstruction
 

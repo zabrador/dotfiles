@@ -1,11 +1,11 @@
 ---
 name: planning-commits
-description: Plan the decomposition of coding work into atomic git commits. Use this skill whenever plan mode is active (trivial or not — a trivial change produces a single-commit plan), when mid-work changes have started spanning multiple concerns, when asked to split or reorganize commits, when a working tree is tangled and needs to be separated into discrete commits, when a late fix must be placed into an existing commit sequence (squash into the commit it corrects vs. a new commit — e.g. during PR maintenance), or when the committing-changes skill needs help because a diff isn't atomic. Also use whenever the user mentions atomic commits, commit decomposition, or asks how to structure a sequence of commits.
+description: Plan the decomposition of coding work into atomic git commits. Use this skill whenever plan mode is active (trivial or not — a trivial change produces a single-commit plan), when mid-work changes have started spanning multiple concerns, when asked to split or reorganize commits, when a working tree is tangled and needs to be separated into discrete commits, when a late fix must be placed into an existing commit sequence (squash into the commit it corrects vs. a new commit — e.g. during PR maintenance), or when the crafting-commits gut check fails and a decomposition is needed. Also use whenever the user mentions atomic commits, commit decomposition, or asks how to structure a sequence of commits.
 ---
 
 This skill handles the planning and decomposition of coding work into atomic git commits. It operates at the implementation-planning altitude: given a task that is about to be worked on (or was just completed without commits being made along the way), it produces the sequence of atomic commits that will land the work cleanly.
 
-A companion skill, `committing-changes`, handles the mechanics of actually writing commit messages and running git commands. When this skill produces a plan, `committing-changes` executes against it. When `committing-changes` detects that the current diff isn't atomic and can't be safely committed, this skill takes over to produce a decomposition.
+Two companion skills handle execution: `crafting-commits` defines the standard each commit must meet, and `making-git-changes` runs the git operations. When this skill produces a plan, they execute against it. When `crafting-commits`' gut check finds the current diff isn't atomic and can't be safely committed, this skill takes over to produce a decomposition.
 
 ## What makes a commit atomic
 
@@ -57,7 +57,7 @@ The heuristic inverts because the units have different purposes. PRs need to shi
 
 ## Planning ahead, committing as you execute
 
-Produce the commit sequence up front — typically when plan mode is active — then execute against it, invoking `committing-changes` at each planned commit point. Trivial changes collapse to a single-commit plan; there's no triviality threshold.
+Produce the commit sequence up front — typically when plan mode is active — then execute against it, invoking `making-git-changes` at each planned commit point (each commit checked against `crafting-commits`). Trivial changes collapse to a single-commit plan; there's no triviality threshold.
 
 Plans drift on contact with code. When the current diff no longer matches the next planned unit (an unanticipated refactor, a hidden dependency, a missed boundary), pause and revise the plan before continuing. Don't accumulate mixed concerns hoping to sort them later.
 
@@ -75,11 +75,12 @@ already committed. The planning question is disposition: does this change
 - **Correction** — the revert test decides. If reverting commit N should take
   this change with it (it fixes, completes, or adjusts what N's message
   claims), the change belongs inside N. Execution is a squash; the
-  `rewriting-history` skill owns the mechanics.
+  `making-git-changes` skill owns the mechanics.
 - **New unit** — if the change does something no existing commit's message
   claims (new behavior, a review-requested addition), it is its own commit with
-  its own message, executed via `committing-changes`. Squashing it into an
-  unrelated commit makes that commit dishonest and breaks the revert test.
+  its own message, executed via `making-git-changes` against `crafting-commits`'
+  standard. Squashing it into an unrelated commit makes that commit dishonest
+  and breaks the revert test.
 - **Mixed** — split it: squash the corrective part, commit the new part
   separately.
 
@@ -120,7 +121,7 @@ The leverage here is upstream of the diff. Tangled trees resist clean splits bec
 
 5. **Accept honest non-atomic commits when necessary.** If changes are genuinely inseparable — a refactor that couldn't have been done without the feature it enables — plan them as a single commit with a message that honestly describes both. A truthful non-atomic commit is better than a dishonest "atomic" one.
 
-Once the plan is in place, `committing-changes` executes it, staging hunks (`git add -p`) and committing one planned commit at a time.
+Once the plan is in place, `making-git-changes` executes it, staging hunks (`git add -p`) and committing one planned commit at a time, each checked against `crafting-commits`.
 
 ## What to avoid
 

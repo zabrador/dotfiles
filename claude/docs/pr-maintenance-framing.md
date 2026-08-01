@@ -6,7 +6,7 @@ The audience is someone reasoning about the design of these skills — future-yo
 revising them, or an LLM helping with revisions. The SKILL.md files serve the
 agent doing the work. Companion doc:
 [`atomic-commits-framing.md`](atomic-commits-framing.md) covers the
-atomic-commits cluster (`planning-commits` / `committing-changes` /
+atomic-commits cluster (`planning-commits` / `crafting-commits` /
 `replanning-branches`) in depth; this doc does not restate it.
 
 ## What we're building
@@ -18,11 +18,12 @@ Two skills:
   (root scheduler spawning one agent per stack), what authorizes a change
   (exactly three triggers), and the single standard procedure that performs
   every change.
-- **rewriting-history** — execution doctrine for mutating git history safely:
-  history discipline, lease-pinned force-pushing, worktree isolation,
-  stacked-branch rebasing, conflict-resolution heuristics. Extracted from
-  `maintaining-prs`'s original Git Methods appendix; shared by both clusters
-  and triggered directly by ad-hoc mutation requests.
+- **making-git-changes** — execution mechanics for all git state changes:
+  forward commits, history discipline, lease-pinned force-pushing, worktree
+  isolation, stacked-branch rebasing, conflict-resolution heuristics. Grew
+  from `maintaining-prs`'s original Git Methods appendix (extracted as
+  `rewriting-history`, later absorbing forward-commit mechanics); shared by
+  both clusters and triggered directly by ad-hoc git requests.
 
 ## The whole-system map
 
@@ -32,9 +33,9 @@ Five skills, two clusters, one shared executor:
 | --- | --- | --- |
 | `planning-commits` | atomic commits | plans forward work and fix placement; owns atomicity doctrine |
 | `replanning-branches` | atomic commits | plans the re-decomposition of committed history |
-| `committing-changes` | atomic commits | executes a single forward commit |
+| `crafting-commits` | atomic commits | defines the standard every commit must meet (gut check, format, honesty) |
 | `maintaining-prs` | PR maintenance | watches, triages, and repairs open PRs |
-| `rewriting-history` | shared executor | executes history mutation safely, for any caller |
+| `making-git-changes` | shared executor | executes all git state changes safely, for any caller |
 
 The clusters split by **concern, not by time**: the atomic-commits cluster owns
 the shape of commit history (what the commits should be); the PR-maintenance
@@ -42,27 +43,37 @@ cluster owns PR health (CI, conflicts, review flow, delegation boundaries). A
 PR-maintenance session always *starts* from a published branch, but the split is
 not a pipeline — whenever a repair touches code, the commit-shape question
 re-arises and the atomic-commits skills govern it. The phase split (planning vs
-execution) applies across both clusters — `rewriting-history` is the
-mutation-side counterpart of `committing-changes`, an executor with doctrine
-but no opinions about what the end state should be.
+execution) applies across both clusters — `making-git-changes` is the single
+executor for every git state change, and `crafting-commits` is the
+plan-independent standard it consults whenever a commit is created or modified.
 
 Delegation edges:
 
-- `committing-changes` → `planning-commits` (diff isn't atomic; needs a plan)
+- `crafting-commits` → `planning-commits` (diff isn't atomic; needs a plan)
 - `replanning-branches` → `planning-commits` (atomicity criteria),
-  → `committing-changes` (single-commit execution),
-  → `rewriting-history` (mutation mechanics)
+  → `making-git-changes` (execution)
 - `maintaining-prs` → `planning-commits` (shape of any repair: squash vs new
-  commits), → `committing-changes` (new commits during a repair),
-  → `rewriting-history` (mutation mechanics)
-- `rewriting-history` also fires directly on ad-hoc mutation asks ("rebase this
-  onto main", "squash these fixups", "resolve this conflict") with no parent
-  skill active
+  commits), → `making-git-changes` (execution)
+- `making-git-changes` → `crafting-commits` (after any operation that creates
+  or modifies a commit); also fires directly on ad-hoc asks ("commit this",
+  "rebase this onto main", "squash these fixups", "resolve this conflict")
+  with no parent skill active
+
+The case grid behind the routing — content × sequence — determines which
+planner, if any, leads a git change:
+
+|  | Sequence is new | Sequence exists |
+| --- | --- | --- |
+| **New content** | fresh work → `planning-commits` | fix placement → `planning-commits` |
+| **Existing content** | re-decomposition → `replanning-branches` | pure replay (rebase onto newer base, conflicts, re-trigger) → no planner |
+
+Plan-first applies wherever commit shape changes; pure replay needs only the
+safety doctrine, with `crafting-commits`' honesty rule as the backstop.
 
 Routing, by ask — the utterance and the skill that should lead:
 
 - "Rebase this onto main", "squash these fixups", "resolve this conflict",
-  "force-push this safely" → `rewriting-history`: the shape is already known;
+  "force-push this safely" → `making-git-changes`: the shape is already known;
   only execution is needed.
 - "Clean up this branch's commits", "split this into atomic commits", "redo
   this branch's history" → `replanning-branches` (committed history) or
@@ -70,7 +81,7 @@ Routing, by ask — the utterance and the skill that should lead:
 - "Fix my PR", "why is CI red", "watch my PRs", "address the review comments"
   → `maintaining-prs`: triage precedes any mutation, and mutation happens only
   through its change procedure.
-- "Commit this" → `committing-changes`.
+- "Commit this" → `making-git-changes`, judged against `crafting-commits`.
 
 ## maintaining-prs
 
@@ -97,36 +108,42 @@ skills.
 - The Stack Topology Reconstruction appendix (GitHub-specific, single-consumer)
 
 **Explicitly does not own:**
-- Git mutation mechanics (`rewriting-history`)
+- Git execution mechanics (`making-git-changes`)
 - What a branch's commit sequence should be (`planning-commits` /
   `replanning-branches`)
 - Merge-state changes or draft promotion (nobody — reserved to the user)
 
-## rewriting-history
+## making-git-changes
 
-**Scope:** How to execute a history mutation safely, for any caller. Doctrine,
-not sequence design.
+**Scope:** How to execute any git state change safely, for any caller —
+forward commits and mutations alike. Mechanics, not sequence design, not
+judgment.
 
 **Owns:**
+- The route-before-execute rules: a shape decision must exist when commit
+  shape changes (already made in plan-led work; consult a planner when
+  absent), `crafting-commits` check after any commit is created or modified,
+  doctrine only for pure replay
+- Forward-commit mechanics (staging, `git add -p`, `git commit`)
 - History discipline (rebase-not-merge; squash fixes into the commit they fix)
 - Safe force-pushing (`--force-with-lease`, lease pinned to the inspected SHA)
-- Working-tree hygiene (isolated worktrees; reset before rebase)
+- Working-tree hygiene (isolated worktrees; reset before rebase; backup
+  branches before destructive reorders)
 - Stacked-branch rebasing (`--onto` after a parent merges)
 - Conflict-resolution heuristics (append-append, follow-the-deletion,
   marker greps, pre-push hook as arbiter)
-- Backup branches before destructive reorders, and co-author trailers across
-  rewritten history (both migrated from `replanning-branches`)
+- Co-author trailers across rewritten history
 
 **Explicitly does not own:**
 - Atomicity and commit-sequence design (`planning-commits`,
   `replanning-branches`)
-- Forward commits (`committing-changes`)
-- When a mutation is *authorized* — callers decide that (`maintaining-prs`'s
+- The standard a commit must meet (`crafting-commits`)
+- When a change is *authorized* — callers decide that (`maintaining-prs`'s
   triggers, the user's ad-hoc request); this skill only governs execution
 
-**Triggers:** any imminent history rewrite or conflict resolution — ad-hoc
-requests included — and invocation from `maintaining-prs` or
-`replanning-branches` at their mutation steps.
+**Triggers:** any imminent git state change — ad-hoc commit, rebase, or
+conflict-resolution requests included — and invocation from `maintaining-prs`
+or `replanning-branches` at their execution steps.
 
 ## Key concepts encoded in this cluster
 
@@ -176,11 +193,11 @@ drafts are permanently out of scope.
   trigger.
 - **Naming:** the gerund-form rule from the atomic-commits framing doc is
   repo-wide (verb + -ing + object; plural where countable, bare where
-  uncountable). Hence `maintaining-prs` and `rewriting-history`.
+  uncountable). Hence `maintaining-prs` and `making-git-changes`.
 - **Repo-agnostic appendix style:** sections intended for possible extraction
   are written self-contained — no cluster vocabulary, no repo assumptions — so
   they can be lifted out as a skill without edits. This is how
-  `rewriting-history` was born; `maintaining-prs`'s Stack Topology appendix
+  the shared git executor was born; `maintaining-prs`'s Stack Topology appendix
   keeps the same property.
 - **Collection-level labels live in the plugin name.** Skill slugs describe
   their own scope; framing-doc titles name their cluster; the plugin name
@@ -205,8 +222,8 @@ failure modes, not literature.
 
 - **Push back on scope creep across the delegation edges.** Pressure points:
   mutation mechanics drifting back into `maintaining-prs` or
-  `replanning-branches` (they cite `rewriting-history`, they don't restate
-  it); triage doctrine drifting into `rewriting-history` (it executes, it
+  `replanning-branches` (they cite `making-git-changes`, they don't restate
+  it); triage doctrine drifting into `making-git-changes` (it executes, it
   doesn't authorize); merge/promotion capabilities drifting into scope at all.
 - **Keep the report template mandatory.** Its fields exist because each one
   answers a question the user otherwise has to ask; trimming it re-opens those
@@ -235,8 +252,8 @@ written down as the only case. But a 👍'd review request can be a genuinely
 new atomic unit, and squashing it into an unrelated commit breaks the revert
 test. Step 3 of the change procedure now consults `planning-commits` for
 disposition — correction (squash), new unit (forward commit), or a mix — and
-executes each part with its owning executor (`rewriting-history` for squashes,
-`committing-changes` for new commits). "Always consult the planner" follows
+executes each part via the shared executor (now `making-git-changes`), judged
+against the commit standard. "Always consult the planner" follows
 the same rationale as "`planning-commits` always fires in plan mode": a
 trivial disposition costs nothing to decide explicitly, and a triviality
 threshold would blur the trigger. `planning-commits` (not
@@ -348,6 +365,17 @@ descriptions drive it), and the collection will outgrow any topical name.
 The plugin channel serves other people; the stow channel serves the user's
 own machines. Installing both on one machine duplicates every skill (bare
 and namespaced) — don't.
+
+**`rewriting-history` and `committing-changes` refactored into
+`making-git-changes` + `crafting-commits`.**
+*Supersedes "`rewriting-history` kept, despite sounding odd" above and
+reshapes the extraction entry's boundaries.* The standard/mechanics
+factorization and its full rationale live in `atomic-commits-framing.md`'s
+decisions log; the whole-system consequences live here: `making-git-changes`
+is the single executor for every git state change (forward and mutating),
+`crafting-commits` is the plan-independent standard consulted whenever a
+commit is created or modified, and the case grid above records when a
+planner leads and when none does.
 
 **Trigger routing is encoded, not just hoped for.**
 The skill descriptions carry not-this-skill signals at the known confusion

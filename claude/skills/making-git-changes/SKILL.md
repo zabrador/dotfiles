@@ -1,28 +1,52 @@
 ---
-name: rewriting-history
+name: making-git-changes
 description: >
-  Execution doctrine for mutating git history safely — rebasing, amending,
-  squashing fixups into earlier commits, force-pushing, resolving conflicts,
-  and isolating mutations in worktrees. Use this skill whenever history is
-  about to be rewritten or a conflict resolved: an ad-hoc request to rebase a
-  branch, cleaning merge commits off a branch, force-pushing a rewritten
-  branch, rebasing stacked branches after a parent merges, or when another
-  skill (maintaining-prs, replanning-branches) reaches its mutation step. This
-  skill governs how a mutation is executed safely, not what the commit
-  sequence should be — sequence design belongs to planning-commits and
-  replanning-branches, and single forward commits to committing-changes.
+  Execution mechanics for changing git state safely — staging and committing,
+  amending, squashing fixups into earlier commits, rebasing, lease-pinned
+  force-pushing, resolving conflicts, and isolating work in worktrees. Use
+  this skill whenever a git state change is about to be made: an ad-hoc
+  request to commit or rebase, cleaning merge commits off a branch,
+  force-pushing a rewritten branch, rebasing stacked branches after a parent
+  merges, or when another skill (maintaining-prs, replanning-branches)
+  reaches its execution step. This skill governs how operations are executed
+  safely — what the commit sequence should be belongs to planning-commits and
+  replanning-branches, and the standard a commit must meet belongs to
+  crafting-commits.
 ---
 
-General-purpose rules for mutating git history safely and keeping branches
+General-purpose rules for changing git state safely and keeping branches
 clean. Deliberately self-contained and repo-agnostic — no assumptions about
 any particular repo, host, or workflow.
 
-Companion skills own the neighboring territory. What the commit sequence
-*should be* is planning territory: `planning-commits` for fresh work,
-`replanning-branches` for reshaping committed history. Making a single forward
-commit — staging, message, `git commit` — is `committing-changes`. This skill
-owns only the mutation mechanics: once you know what history should look like,
-this is how to get there without losing work or clobbering anyone else's.
+## Route before you execute
+
+Three questions determine what accompanies any operation here:
+
+1. **Does the operation change what any commit *is* — its content or its
+   boundaries?** Then a shape decision must exist before executing. In
+   plan-led work it already does — the plan or a fix-placement disposition
+   made it; execute against that, don't re-plan. If no such decision exists,
+   it is about to be made implicitly — stop and consult the planner:
+   `planning-commits` for fresh work or placing a late fix (squash vs. new
+   commit), `replanning-branches` for re-decomposing committed history.
+2. **Did the operation create or modify a commit?** Check the result against
+   `crafting-commits` — the gut check, the message format, and the
+   message-stays-true rule. This applies to squashes and amends exactly as it
+   does to fresh commits.
+3. **Pure replay** — rebasing onto a newer base, resolving conflicts while
+   preserving intent, re-triggering CI? No planner, no re-judging beyond
+   `crafting-commits`' honesty backstop; the safety doctrine below is what
+   matters.
+
+## Forward commits
+
+1. Run `git status` and `git diff` (plus `git diff --staged` if anything is
+   already staged) to see what's about to be committed.
+2. Check the diff against `crafting-commits`' standard. If it fails, stop and
+   defer as that skill directs.
+3. If it passes: stage the intended changes with `git add <files>` or
+   `git add -p` for hunk-level selection, craft the message per the standard,
+   and run `git commit`.
 
 ## History discipline
 
@@ -35,6 +59,8 @@ this is how to get there without losing work or clobbering anyone else's.
   - Fix belongs to an earlier commit → `git commit --fixup=<sha>`, then
     `git rebase -i --autosquash <base>`
   - Never leave standalone "fix", "oops", or "address review" commits.
+  - After the squash lands, re-check the target commit against
+    `crafting-commits` — its message must still describe it.
 
 ## Safe force-pushing
 
