@@ -81,12 +81,12 @@ elif [ -n "$SSH_PRIVATE_KEY_ED25519" ]; then
   echo "...SSH key import complete!"
 fi
 
-# --- Ona: Claude remote ownership watcher -----------------------------------
+# --- Ona ---------------------------------------------------------------------
 
 if [ "$IS_ON_ONA" = "true" ]; then
-  echo "Starting Claude-remote ownership watcher..."
-  sh ona/fix-claude-remote-ownership.sh
-  echo "...starting Claude-remote ownership watcher complete!"
+  echo "Running Ona-specific setup..."
+  sh ona/setup.sh
+  echo "...Ona-specific setup complete!"
 fi
 
 # --- Login shell ------------------------------------------------------------

@@ -26,7 +26,7 @@ The installer:
 3. **Removes any existing home-directory files** that would collide with the Stow package, then links the package with Stow
 4. Links each Claude skill from [`claude/skills/`](claude/skills/) into `~/.claude/skills/` (**removing any same-named skill already there**; other local skills are left alone)
 5. In Codespaces, strips signing-related Git config sections; otherwise, if `SSH_PRIVATE_KEY_ED25519` is set, writes that key into `~/.ssh`
-6. On Ona hosts, starts a background watcher that returns ownership of files under `~vscode/.claude` to the `vscode` user
+6. On Ona hosts, runs [`ona/setup.sh`](ona/setup.sh).
 7. Ensures Zsh is listed in `/etc/shells` and sets it as the login shell (`chsh`)
 
 ### What gets linked
