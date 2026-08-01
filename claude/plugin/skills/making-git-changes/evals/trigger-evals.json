@@ -1,0 +1,12 @@
+[
+  { "query": "Rebase this branch onto main", "should_trigger": true },
+  { "query": "Squash these fixup commits into the commits they belong to", "should_trigger": true },
+  { "query": "Commit this change", "should_trigger": true },
+  { "query": "Force-push this branch safely", "should_trigger": true },
+  { "query": "Help me resolve the conflicts from this rebase", "should_trigger": true },
+  { "query": "Clean up this branch's history into atomic commits", "should_trigger": false },
+  { "query": "Split this tangled working tree into separate commits", "should_trigger": false },
+  { "query": "Why is CI red on my PR?", "should_trigger": false },
+  { "query": "Is this commit message any good?", "should_trigger": false },
+  { "query": "Plan the sequence of commits for this new feature", "should_trigger": false }
+]

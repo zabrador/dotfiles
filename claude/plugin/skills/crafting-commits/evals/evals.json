@@ -1,0 +1,34 @@
+{
+  "skill_name": "crafting-commits",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Initialize a git repository and make an initial commit adding README.md with a one-paragraph project description that contains the misspelling 'recieve'. Then, in the working tree, do both of the following: create auth.py implementing a login(username, password) function, and correct the misspelling in README.md. Now commit my changes.",
+      "expected_output": "The unrelated changes are not bundled: either two atomic commits (the feature and the typo fix) are created, or the multi-concern diff is explicitly flagged before committing.",
+      "expectations": [
+        "The auth.py addition and the README typo fix do not land in the same commit",
+        "Each created commit message follows Conventional Commits and accurately describes only its own change",
+        "The transcript or commit structure acknowledges that the working tree contained multiple unrelated concerns"
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "Initialize a git repository. Commit greeting.py containing only a hello() function, using the commit message 'feat: add hello greeting'. Then add a goodbye() function to greeting.py in the working tree. This change belongs in the previous commit - fold it in.",
+      "expected_output": "The change is amended into the prior commit and the message is updated to describe the commit as it now is (both functions), not just the hello greeting.",
+      "expectations": [
+        "The final history contains exactly one commit, and greeting.py at HEAD contains both hello() and goodbye()",
+        "The final commit message no longer describes only the hello greeting; it accurately covers the module as it now is"
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "Initialize a git repository with an initial commit adding app.py containing an add(a, b) function. In the working tree, append a subtract(a, b) function to app.py. Commit it.",
+      "expected_output": "A clean, atomic single-purpose change commits without friction: one new commit with an accurate Conventional Commits message, no refusal or unnecessary splitting.",
+      "expectations": [
+        "Exactly one new commit was created on top of the initial commit",
+        "The new commit's message follows Conventional Commits and accurately describes adding the subtract function",
+        "The change was not refused, questioned as non-atomic, or split into multiple commits"
+      ]
+    }
+  ]
+}

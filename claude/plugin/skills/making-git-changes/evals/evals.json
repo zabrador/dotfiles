@@ -1,0 +1,37 @@
+{
+  "skill_name": "making-git-changes",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Initialize a git repository in the current directory. Create greeting.py with a hello() function and a __main__ block that calls it. Commit your work.",
+      "expected_output": "A single clean commit whose Conventional Commits message accurately describes adding the greeting module.",
+      "expectations": [
+        "Exactly one commit exists in the repository",
+        "The commit message follows Conventional Commits format: a type such as feat, optional scope, then a short imperative summary",
+        "The commit message summary line is under roughly 70 characters",
+        "The working tree is clean after the commit (git status reports nothing to commit)"
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "Initialize a git repository. Make commit 1 adding config.py containing MAX_RETRIES = 3. Make commit 2 adding client.py with a retry loop that reads MAX_RETRIES from config. Then: MAX_RETRIES was supposed to be 5. Fix it, keeping the history clean.",
+      "expected_output": "The constant is corrected by amending history so the fix lives in the commit that introduced config.py; no standalone fix commit remains.",
+      "expectations": [
+        "The final history contains exactly two commits",
+        "No standalone correction commit exists (no commit whose message is essentially 'fix', 'oops', or 'update config')",
+        "git show of the commit that introduces config.py shows MAX_RETRIES = 5",
+        "client.py at HEAD still reads MAX_RETRIES and the tree is consistent"
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "Initialize a git repository. On main, commit README.md containing a '## Setup' section with a sentence of content. Create branch feature from main and commit an added '## Usage' section with a sentence of content at the end of README.md. Back on main, commit an added '## License' section with a sentence of content at the end of README.md. Now rebase feature onto main and resolve whatever comes up.",
+      "expected_output": "Feature is rebased cleanly onto main; both newly added sections survive; no conflict markers remain anywhere.",
+      "expectations": [
+        "The rebase completed and feature's commit now sits on top of main's latest commit",
+        "README.md at the rebased tip contains the Setup, Usage, and License sections (an append-append conflict keeps both sides)",
+        "No conflict markers (<<<<<<<, =======, >>>>>>>) appear in any tracked file at the rebased tip"
+      ]
+    }
+  ]
+}
