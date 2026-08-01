@@ -8,7 +8,7 @@
   "plugins": [
     {
       "name": "zabrabot",
-      "source": "./claude"
+      "source": "./claude/plugin"
     }
   ]
 }

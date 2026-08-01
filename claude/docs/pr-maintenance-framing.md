@@ -377,6 +377,18 @@ is the single executor for every git state change (forward and mutating),
 commit is created or modified, and the case grid above records when a
 planner leads and when none does.
 
+**Plugin root relocated from `claude/` to `claude/plugin/`.**
+Three path-semantics collisions in quick succession exposed the problem with
+`claude/` doubling as plugin root and personal-config tree:
+`claude/settings.json` is a reserved plugin-component name,
+`.claude/settings.json` is live project settings, and `docs/` plus `user/`
+shipped to plugin consumers as dead weight. The plugin root now contains only
+published content (the manifest and `skills/`), so reserved component names
+are landmines only inside `claude/plugin/` — where using one is deliberate —
+and personal files never ship. Consumers are unaffected: the marketplace
+`source` path is internal wiring, and the plugin name (`zabrabot:`) doesn't
+change.
+
 **Trigger routing is encoded, not just hoped for.**
 The skill descriptions carry not-this-skill signals at the known confusion
 points (`maintaining-prs` no longer claims "rebase a branch";

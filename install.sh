@@ -1,6 +1,6 @@
 echo "Installing dotfiles..."
 
-# --- Package manager / Stow -------------------------------------------------
+# --- Package manager / system dependencies -----------------------------------
 
 if type "brew" > /dev/null; then
   echo "Using brew for installation..."
@@ -51,13 +51,12 @@ mkdir -p ~/.claude/skills
 
 # Remove anything that would collide with the skills Stow package; skills not
 # in the package are left alone.
-for skill in claude/skills/*/; do
+for skill in claude/plugin/skills/*/; do
   rm -rf ~/.claude/skills/"$(basename "$skill")"
 done
 
-stow skills --dir claude --target ~/.claude/skills
+stow skills --dir claude/plugin --target ~/.claude/skills
 echo "...Claude skills linked!"
-
 # --- Environment-specific credentials / Codespaces --------------------------
 
 if [ "$CODESPACES" = "true" ]; then

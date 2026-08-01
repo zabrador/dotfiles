@@ -24,7 +24,7 @@ The installer:
 1. Installs Stow (via brew or apt) if needed
 2. Clones [Antigen](https://github.com/zsh-users/antigen) into `~/.antigen` if missing
 3. **Removes any existing home-directory files** that would collide with the Stow package, then links the package with Stow
-4. Links each Claude skill from [`claude/skills/`](claude/skills/) into `~/.claude/skills/` (**removing any same-named skill already there**; other local skills are left alone)
+4. Links each Claude skill from [`claude/plugin/skills/`](claude/plugin/skills/) into `~/.claude/skills/` (**removing any same-named skill already there**; other local skills are left alone)
 5. In Codespaces, strips signing-related Git config sections; otherwise, if `SSH_PRIVATE_KEY_ED25519` is set, writes that key into `~/.ssh`
 6. On Ona hosts, runs [`ona/setup.sh`](ona/setup.sh).
 7. Ensures Zsh is listed in `/etc/shells` and sets it as the login shell (`chsh`)
@@ -40,7 +40,7 @@ The `shell/` Stow package maps these files into `~/`:
 | `shell/.gitignore_global` | `~/.gitignore_global` |
 | `shell/.asdfrc` | `~/.asdfrc` |
 
-The `claude/skills` Stow package links each skill directory into `~/.claude/skills/` (per-skill symlinks, not one folded directory link), so Claude Code picks the skills up as personal skills on every machine while locally created skills can live alongside them. Because the links point into the repo, editing a skill through `~/.claude/skills/` edits the repo's working tree.
+The `claude/plugin/skills` Stow package links each skill directory into `~/.claude/skills/` (per-skill symlinks, not one folded directory link), so Claude Code picks the skills up as personal skills on every machine while locally created skills can live alongside them. Because the links point into the repo, editing a skill through `~/.claude/skills/` edits the repo's working tree.
 
 ### Assumptions
 
@@ -57,7 +57,7 @@ Personal Claude Code configuration.
 Two channels:
 
 - **As dotfiles:** `install.sh` links each skill into `~/.claude/skills/` (see step 4 above), so the skills ride along wherever the dotfiles are installed, invoked by bare name.
-- **As plugin:** the repo doubles as a Claude Code plugin marketplace, with [`claude/`](claude/) as the plugin root:
+- **As plugin:** the repo doubles as a Claude Code plugin marketplace, with [`claude/plugin/`](claude/plugin/) as the plugin root:
 
   ```
   /plugin marketplace add zabrador/dotfiles
@@ -68,11 +68,11 @@ Two channels:
 
 ### Skills
 
-- [`planning-commits`](claude/skills/planning-commits/SKILL.md) — conceptual and decompositional; helps structure work as a sequence of atomic commits.
-- [`crafting-commits`](claude/skills/crafting-commits/SKILL.md) — the standard for what a good commit looks like: atomicity gut check, Conventional Commits format, and message honesty under amends and squashes.
-- [`replanning-branches`](claude/skills/replanning-branches/SKILL.md) — retroactive variant of `planning-commits`; re-shapes an already-committed branch into a clean atomic sequence on a fresh branch off the merge-base.
-- [`maintaining-prs`](claude/skills/maintaining-prs/SKILL.md) — PR maintenance; watches opt-in labeled PRs, triages CI failures, conflicts, and review feedback, and repairs whole stacks through a single cascade procedure.
-- [`making-git-changes`](claude/skills/making-git-changes/SKILL.md) — execution mechanics for all git state changes (commit, amend, rebase, force-push, conflict resolution); routes to the planners when commit shape changes and checks every created or modified commit against `crafting-commits`.
+- [`planning-commits`](claude/plugin/skills/planning-commits/SKILL.md) — conceptual and decompositional; helps structure work as a sequence of atomic commits.
+- [`crafting-commits`](claude/plugin/skills/crafting-commits/SKILL.md) — the standard for what a good commit looks like: atomicity gut check, Conventional Commits format, and message honesty under amends and squashes.
+- [`replanning-branches`](claude/plugin/skills/replanning-branches/SKILL.md) — retroactive variant of `planning-commits`; re-shapes an already-committed branch into a clean atomic sequence on a fresh branch off the merge-base.
+- [`maintaining-prs`](claude/plugin/skills/maintaining-prs/SKILL.md) — PR maintenance; watches opt-in labeled PRs, triages CI failures, conflicts, and review feedback, and repairs whole stacks through a single cascade procedure.
+- [`making-git-changes`](claude/plugin/skills/making-git-changes/SKILL.md) — execution mechanics for all git state changes (commit, amend, rebase, force-push, conflict resolution); routes to the planners when commit shape changes and checks every created or modified commit against `crafting-commits`.
 
 The skills coordinate across two clusters split by concern: atomic commits (`planning-commits` plans forward work and fix placement, `replanning-branches` takes over as the planner when reshaping a branch's already-committed history, `crafting-commits` holds the standard every commit must meet) and PR maintenance (`maintaining-prs` keeps open PRs green, consulting the atomic-commits skills for the shape of any repair). `making-git-changes` is the shared executor both clusters use for every git state change.
 
