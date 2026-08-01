@@ -67,6 +67,19 @@ requires rebasing from the stack's base (a child cannot move to latest `main`
 without its ancestors moving first), the stack is also the natural unit of
 mutation — one owner per stack means no locking is needed at all.
 
+**Session preflight (root, before anything else):**
+
+- **Verify `gh auth status`.** Everything downstream depends on it, and an
+  unauthenticated `gh` fails enumeration with less legible errors than the
+  auth check itself. If unauthenticated, stop and give the user the concrete
+  unblock step (`gh auth login`) — don't enumerate, don't spawn.
+- **Resolve the user's branch prefix**: `$BRANCH_PREFIX` if set, else
+  `gh api user --jq .login`. Topology reconstruction's merged-parent signal
+  and any branch the session creates depend on it; an unresolved prefix
+  degrades both silently.
+- Re-verify each session — auth expires, and environment variables don't
+  travel between machines.
+
 **Root agent:**
 
 - Enumerates in-scope PRs, groups them into **stacks by topology** (per the
@@ -80,7 +93,12 @@ mutation — one owner per stack means no locking is needed at all.
   affected stack's agent with the new roster** rather than mutating it.
 - Is the **sole voice to the user**: stack agents report to root, never to the
   user directly. Root relays only real events — a check terminalizing, a genuine
-  failure, an approval dismissal — not every poll.
+  failure, an approval dismissal — not every poll. Every relay separates
+  *for-your-awareness* from *blocked-on-you*. The label is standing delegation:
+  never solicit re-confirmation of an action it already authorizes — an
+  imminent rebase that will dismiss an approval is relayed as fact, not posed
+  as a question. A heads-up phrased as "tell me now if…" manufactures a gate
+  the user then has to clear.
 
 **Stack agent** (one per stack, owns every PR in it end-to-end):
 
@@ -94,9 +112,36 @@ mutation — one owner per stack means no locking is needed at all.
 - Stays scoped to its own stack, with one read-only exception: the flake
   cross-reference in CI triage may query other PRs' recent runs directly
   (e.g. `gh run list` repo-wide). No shared state between agents.
-- **If a git/GitHub operation is blocked by a safety classifier** (checkout,
-  push, etc.), abort the procedure and report to root — which surfaces it to the
-  user. Never work around a block.
+- Runs as a **background agent**, which makes turn-ending semantics
+  load-bearing: **ending a turn is termination, not a pause** — no monitor or
+  notification will wake a finished agent. Wait on long operations (installs,
+  CI runs) synchronously inside the turn. The only legitimate turn-ending
+  outputs are the full report template or an explicit escalation; anything
+  else is abandoned work-in-progress.
+- **If an operation is blocked by a safety classifier**, stop and follow
+  "Safety-classifier blocks" below.
+
+**Safety-classifier blocks (any layer).** Any operation — a push, a comment
+post, even an agent spawn — may be denied by a pre-execution safety
+classifier. Doctrine:
+
+- **Abort and surface the denial** to the user (via root). Never work around a
+  block — no rewording, no alternate mechanism, no splitting the operation to
+  slip past.
+- **One user-authorized retry is legitimate** — denials can be false
+  positives, and an explicit user go is the sanctioned way to test that. A
+  second identical denial is terminal for the session: park the item, report
+  it, and move on.
+- **Don't diagnose the gate from inside the session.** Denials are typically
+  deterministic on the operation's *intent* and surface no reason. Editing
+  policy files, spawning test agents, or A/B-ing wording burns turns, cannot
+  clear the block, and shades into working around it. Park the item and hand
+  the user a clean reproduction instead.
+- **Distinguish pre-execution denials from post-hoc warnings.** A denial
+  blocks an action; a warning annotates an action that already succeeded.
+  Warnings are audit signal, not obstruction — relay them, and don't infer
+  the denial gate's reasoning from a warning's text: they are separate
+  mechanisms.
 
 ## Triggers — what requires a change
 
@@ -163,6 +208,15 @@ Reading `mergeable`:
   and referencing the commit. **Self-identify as an agent** so it's clear the user
   isn't the one responding — open with a prefix like
   `🤖 Claude, on <user>'s behalf:`.
+- **Repo policy may forbid agent-authored comments — the label supersedes it.**
+  Some repos' agent docs ban replying on a human's behalf. The
+  `maintained-by:agent` label is the user's explicit, per-PR delegation, and
+  for the self-identified replies this skill requires it governs over blanket
+  repo docs. Flag the conflict to the user once (the repo doc deserves
+  fixing), then reply as normal. If the reply is then blocked at the
+  permission layer, that's a safety-classifier block (see Orchestration) —
+  park it after at most one user-authorized retry and put the reply's
+  substance in your report so the user can post or adapt it.
 - **Batch qualifying feedback.** Collect all currently-👍'd comments and address
   them in **one push per review pass, not one push per comment** — push-per-nit
   multiplies CI runs, approval dismissals, and bot-review passes. If human review
@@ -222,8 +276,21 @@ base to tip**, regardless of which PR triggered it:
      - threads replied to
      - PR description still accurate y/n (update it if that's within your remit)
      - current CI state
+     - judgment calls: any non-mechanical conflict resolution or discretionary
+       choice, stated so the user can review it ("none" if none)
+     - human-gated checks encountered, by name, with the human action needed
+       ("none" if none)
+     - worktree disposition (removed, or retained and why)
      A report missing any of these is incomplete — root should bounce it back
-     rather than chase details. Root relays the user-relevant parts.
+     rather than chase details, and treats any non-template turn-ending output
+     (a status line, a promise to resume when something completes) as
+     work-in-progress rather than a result — even when the agent's task shows
+     as completed. Root relays the user-relevant parts.
+   - **Dispose of the worktree deliberately.** When the stack reaches *green
+     and reported* with nothing in flight, remove its worktree — a
+     bootstrapped worktree is often multi-GB, and silently orphaned ones
+     outlive the session. If you retain it (more triggers look imminent), say
+     so in the report.
    - Return to watching the resulting CI runs across the stack.
 
 ## Repo/environment specifics

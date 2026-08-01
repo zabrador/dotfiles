@@ -395,6 +395,51 @@ points (`maintaining-prs` no longer claims "rebase a branch";
 `replanning-branches` disclaims plain rebases), and the whole-system map
 records ask→skill routing. What remains is empirical — see Open questions.
 
+**Classifier denials: one user-authorized retry, then terminal — never
+diagnose in-session.**
+A 2026-08-01 session hit four byte-identical denials across three mechanisms
+(the direct call, a settings edit that would permit it, an agent spawn whose
+prompt merely described it) and spent roughly a third of its turns editing
+policy files and spawning test agents to diagnose a gate that surfaces no
+reasons and keys on intent, not wording. The retry allowance exists because
+one denial in the same session *was* a false positive, cleared by an explicit
+user go. Pre-execution denials and post-hoc warnings are kept explicitly
+distinct because the session's costliest wrong turn was inferring the denial
+gate's reasoning from a warning's policy citation — separate mechanisms,
+separate evidence.
+
+**The label supersedes repo docs on agent-authored replies.**
+User ruling (2026-08-01): a target repo's AGENTS.md ban on replying on a
+human's behalf collided with trigger 3's reply requirement; the user ruled
+the skill's standing delegation governs. Encoded so future sessions flag the
+conflict once instead of relitigating — the observed session spent several
+turns on it, including amending the target repo's AGENTS.md, which didn't
+clear the permission gate anyway. The eval baseline confirmed the failure
+mode: without the rule, the executor deferred to the repo doc and withheld
+the reply.
+
+**Report template extended: judgment calls, human-gated checks, worktree
+disposition.**
+Per how-to-engage, each template field answers a question the user otherwise
+has to ask; all three additions were demanded ad hoc (post-bounce) in the
+observed session. Judgment calls, because conflict resolution sometimes
+embeds a decision the user must be able to veto (a CODEOWNERS line kept from
+`main`); human-gated checks, because agents otherwise report "green except
+one thing" without naming the human action; worktree disposition, because
+bootstrapped worktrees are multi-GB and were silently orphaned across a
+session.
+
+**Stack agents are told their turn-ending semantics: termination, not pause.**
+Two of four stack agents in the observed session ended their turn mid-work
+with a status line, one explicitly expecting a background monitor to wake it
+— but a terminated agent has no live child to wake it, so the result was
+silent abandonment that root caught only by bouncing non-template reports.
+The skill now states the invariant (wait synchronously; template or
+escalation are the only legitimate turn-ending outputs) on the agent side and
+tells root to treat non-template output as work-in-progress. This also
+answers half of the "agent-architecture spec" open question: the doctrine is
+background-agent-aware by construction.
+
 ## Open questions
 
 - **`maintaining-prs` doubles as an agent-architecture spec** (root scheduler,
