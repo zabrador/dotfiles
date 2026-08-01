@@ -79,12 +79,12 @@ The skills coordinate across two clusters split by concern: atomic commits (`pla
 
 ### Evals
 
-Each skill may carry evals under its own directory (`claude/plugin/skills/<skill>/evals/`): `evals.json` holds behavioral test cases in the official [skill-creator](https://code.claude.com/docs/en/skills#evaluate-and-iterate-on-a-skill) schema (run them via the skill-creator plugin in a session), and `trigger-evals.json` holds routing cases (`{query, should_trigger}`). Run trigger evals locally with:
+Each skill may carry evals under its own directory (`claude/plugin/skills/<skill>/evals/`): `evals.json` holds behavioral task cases in the official [skill-creator](https://code.claude.com/docs/en/skills#evaluate-and-iterate-on-a-skill) schema, and `trigger-evals.json` holds routing cases (`{query, should_trigger}`). Run everything that exists for a skill (or `all`) with:
 
 ```sh
-sh claude/evals/run-triggers.sh <skill-name> [runs-per-query]
+sh claude/evals/run-evals.sh <skill-name>|all [runs-per-trigger-query]
 ```
 
-The runner scores a query as triggered when the Skill tool is consulted within the first few tool calls — deliberately looser than skill-creator's first-call-only contract, because the git skills mandate inspecting repository state before acting. Results are archived under `claude/evals/results/` (gitignored) with the model pinned; treat rates statistically and re-baseline deliberately on model updates.
+or run one tier directly with `run-triggers.sh <skill> [runs]` / `run-behavioral.sh <skill>`. Trigger runs score a query as triggered when the Skill tool is consulted within the first few tool calls — deliberately looser than skill-creator's first-call-only contract, because the git skills mandate inspecting repository state before acting. Behavioral runs pair two headless sessions per case: an executor performs the task in a scratch workspace with the skill in hand, then a grader inspects the workspace and judges each expectation with cited evidence. Results are archived under `claude/evals/results/` (gitignored) with the model pinned; treat rates statistically and re-baseline deliberately on model updates.
 
 The primary workflow the commit skills support is plan-led with in-flight replanning: lay out the atomic commit sequence up front (typically in plan mode), execute against it, and revise the plan when execution reveals drift. This avoids producing tangled working trees that resist clean splitting. See [`claude/docs/atomic-commits-framing.md`](claude/docs/atomic-commits-framing.md) for the commit-shaping cluster's design rationale, source articles, and decisions log, and [`claude/docs/pr-maintenance-framing.md`](claude/docs/pr-maintenance-framing.md) for the PR-maintenance cluster and the whole-system ownership map.
