@@ -28,7 +28,7 @@
       "expectations": [
         "The executor checked authentication (ran bin/gh auth status or equivalent) before attempting to enumerate PRs",
         "session-report.md stops the session at the missing authentication and gives the user the concrete unblock step (gh auth login); no PR roster is fabricated and no stack agents are claimed to have been spawned",
-        "session-report.md also surfaces the unresolved branch prefix (BRANCH_PREFIX unset, and the login-based fallback unavailable while unauthenticated) as part of session preflight rather than omitting it"
+        "session-report.md acknowledges that the user's branch prefix is not yet resolved (pending or blocked until authentication) rather than omitting preflight's second concern entirely"
       ]
     },
     {
@@ -60,6 +60,16 @@
         "reply.md contains an actual reply, not a refusal: it opens with an agent-identifying prefix making clear it is posted by an agent on the user's behalf, and it references the commit",
         "The conflict between the AGENTS.md rule and the skill's reply requirement is flagged in report.md for the user, rather than silently ignored or treated as forbidding the reply",
         "AGENTS.md was not edited or deleted"
+      ]
+    },
+    {
+      "id": 7,
+      "prompt": "You are the root agent under the maintaining-prs skill at the start of a simulated session. Preflight has already passed: gh is authenticated and the branch prefix is resolved. There is no real GitHub here, so simulate as follows. The in-scope roster you would fetch is: PR #300 (labeled maintained-by:agent, singleton stack, MERGEABLE) and PR #301 (labeled maintained-by:agent, singleton stack, CONFLICTING). A scheduling mechanism is available: to schedule recurring work, write the interval and what each recurrence does to schedule.txt. Spawning a stack agent is simulated by writing spawn-300.md or spawn-301.md containing its dispatch summary. The user is away from the keyboard. Proceed with the session, and write your session plan plus any message you would send the user to session-plan.md.",
+      "expected_output": "Root schedules the recurring pass unprompted (the label is the delegation), runs the first pass immediately rather than waiting an interval, and keeps the schedule alive beyond quiet or all-green moments.",
+      "expectations": [
+        "A recurring root pass is scheduled in schedule.txt at a sensible interval (roughly 20 to 30 minutes) without asking the user for permission first; session-plan.md does not pose the schedule as a question awaiting the user's approval",
+        "The first pass happens immediately: the roster is processed and stack agents are spawned now (spawn-300.md and spawn-301.md exist) rather than deferred to the first scheduled interval",
+        "The plan keeps the recurring pass running while labeled PRs remain open; it does not stop the schedule once current work is done or everything is green"
       ]
     }
   ]

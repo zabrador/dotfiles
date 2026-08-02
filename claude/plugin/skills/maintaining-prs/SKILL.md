@@ -82,15 +82,7 @@ mutation — one owner per stack means no locking is needed at all.
 
 **Root agent:**
 
-- Enumerates in-scope PRs, groups them into **stacks by topology** (per the
-  [Stack Topology Reconstruction appendix](#stack-topology-reconstruction)), and
-  spawns **one headless background agent per stack**.
-- Keeps the PR→stack→agent assignment current by re-running reconstruction,
-  **re-checking labels on every pass** — a label added or removed is a scope
-  change, handled like a topology change. On either kind of change — a parent
-  merges (detected via the merged-parent gap check in the appendix), a new PR is
-  stacked onto an existing one, a stack splits, a label changes — **respawn the
-  affected stack's agent with the new roster** rather than mutating it.
+- Runs the **pass** (below) on a schedule — root's standing job.
 - Is the **sole voice to the user**: stack agents report to root, never to the
   user directly. Root relays only real events — a check terminalizing, a genuine
   failure, an approval dismissal — not every poll. Every relay separates
@@ -99,6 +91,29 @@ mutation — one owner per stack means no locking is needed at all.
   imminent rebase that will dismiss an approval is relayed as fact, not posed
   as a question. A heads-up phrased as "tell me now if…" manufactures a gate
   the user then has to clear.
+
+**The pass.** Root runs this check on a cadence: **every 20–30 minutes**, with
+the first pass immediately after preflight. Scheduling it is part of starting
+the session, not an authorization to raise with the user — the
+`maintained-by:agent` label is already the delegation, and a scheduler that
+only runs when prompted cannot keep the assignment current. Every pass does
+the same three things (the first pass is not special):
+
+1. **Fetch** — enumerate in-scope PRs, re-checking labels: a label added or
+   removed is a scope change, handled like a topology change.
+2. **Reconstruct** — group the PRs into stacks by topology (per the
+   [Stack Topology Reconstruction appendix](#stack-topology-reconstruction)).
+3. **Reconcile** — spawn **one headless background agent per stack** that
+   lacks one; on any change (a parent merged — the gap check in the appendix —
+   a new PR stacked onto an existing one, a stack split, a label changed),
+   **respawn the affected stack's agent with the new roster** rather than
+   mutating it.
+
+A quiet pass is silent. Keep the schedule until no labeled PRs remain open,
+the user ends it, or the session ends — an all-green moment is not a stopping
+point, since open PRs drift as `main` advances. On a surface with no
+scheduling mechanism, run a pass on every invocation and tell the user that
+watching is not continuous.
 
 **Stack agent** (one per stack, owns every PR in it end-to-end):
 

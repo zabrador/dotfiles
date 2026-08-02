@@ -95,7 +95,9 @@ skills.
 - Opt-in scope via the `maintained-by:agent` label; the label is the user's
   delegation and only the user touches it
 - The two-layer orchestration model: root agent as pure scheduler and sole
-  voice to the user; one stack agent per stack doing all real work
+  voice to the user, running the recurring pass (fetch → reconstruct →
+  reconcile) on an unattended 20–30 minute cadence; one stack agent per stack
+  doing all real work
 - The stack as the unit of ownership and mutation (singleton stacks for
   independent PRs)
 - The three triggers (confirmed-real red CI, conflicts/dirty history,
@@ -439,6 +441,23 @@ escalation are the only legitimate turn-ending outputs) on the agent side and
 tells root to treat non-template output as work-in-progress. This also
 answers half of the "agent-architecture spec" open question: the doctrine is
 background-agent-aware by construction.
+
+**Enumeration is the first recurring pass — cadence is explicit, unattended
+by default.**
+User ruling (2026-08-01): root asked permission twice before scheduling the
+recurring pass the doctrine implies, leaving a freshly-labeled PR conflicting
+and unowned until the user noticed. Two gaps: the skill never defined when a
+"pass" happens, and never said root runs unattended — so an agent read "keeps
+the assignment current" as a consistency property and treated the timer as a
+new authorization. The label is the authorization. A follow-up refinement
+removed "initial enumeration" as a concept: the first enumeration is just the
+first pass, so every pass is the same code path with no special case. The
+stop condition deliberately outlives green moments — open PRs drift as `main`
+advances and labels arrive between passes, so a scheduler that stops when
+everything is green recreates the missed-label failure it exists to prevent.
+On surfaces without a scheduling mechanism, the pass runs per-invocation and
+the user is told watching is not continuous (a further partial answer to the
+agent-architecture open question).
 
 ## Open questions
 
