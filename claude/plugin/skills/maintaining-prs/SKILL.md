@@ -57,9 +57,10 @@ promotion are the user's decisions.
 
 ## Orchestration
 
-Two layers. **All meaningful work happens in stack agents; the root agent is a
-pure scheduler** — it never touches git, never writes to GitHub, and never fixes
-anything itself.
+Two layers. **Stack agents own their stacks end-to-end — detection, triage,
+and all mutation; the root agent keeps the stack roster correct and wakes the
+watchers, strictly read-only** — it never touches git, never writes to GitHub,
+and never fixes anything itself.
 
 The unit of ownership is the **stack**: a chain of stacked in-scope PRs, base to
 tip. An independent PR is a singleton stack. Because rebasing any PR in a stack
@@ -103,22 +104,43 @@ the same three things (the first pass is not special):
    removed is a scope change, handled like a topology change.
 2. **Reconstruct** — group the PRs into stacks by topology (per the
    [Stack Topology Reconstruction appendix](#stack-topology-reconstruction)).
-3. **Reconcile** — spawn **one headless background agent per stack** that
-   lacks one; on any change (a parent merged — the gap check in the appendix —
-   a new PR stacked onto an existing one, a stack split, a label changed),
-   **respawn the affected stack's agent with the new roster** rather than
-   mutating it.
+3. **Reconcile and wake** — ensure every in-scope stack has a live or
+   dormant-but-wakeable watcher: spawn one where missing; on any change (a
+   parent merged — the gap check in the appendix — a new PR stacked onto an
+   existing one, a stack split, a label changed), **respawn the affected
+   stack's agent with the new roster** rather than mutating it. Then **wake
+   every dormant watcher** to run its sweep. A watcher that does not respond
+   to a wake is dead — respawn it, losing nothing: pending work is re-derived
+   from GitHub state, not from agent memory. Root never sweeps feedback
+   itself: sweep outputs stay in watcher contexts, and root's own context
+   holds only the roster, the parked-items list, and the reports that come
+   back.
 
 A quiet pass is silent. Keep the schedule until no labeled PRs remain open,
 the user ends it, or the session ends — an all-green moment is not a stopping
 point, since open PRs drift as `main` advances. On a surface with no
-scheduling mechanism, run a pass on every invocation and tell the user that
-watching is not continuous.
+scheduling mechanism or persistent agents, run the pass — watchers' sweeps
+included, inline — on every invocation and tell the user that watching is
+not continuous.
+
+**Quiet means dormant, not dead.** When its stack is quiet — no unresolved
+trigger, nothing in flight — a watcher delivers its report and goes dormant
+by ending its turn; root's next pass wakes it, context intact, and the sweep
+runs in the watcher, never in root. Dormancy loses nothing: pending work is
+re-derived from GitHub's own record on every sweep, so no continuity depends
+on a watcher's memory surviving. What root must never do is let
+PR-level quietness stand in for a sweep — head SHA, mergeable state, and CI
+cannot see a 👍 or a review body.
 
 **Stack agent** (one per stack, owns every PR in it end-to-end):
 
-- Watches CI and comments on **all PRs in its stack**, and performs all **triage**
-  (the trigger sections below).
+- **Owns detection for its stack.** On every wake (and in every
+  change-procedure aftermath), runs the sweep below and reports up to root:
+  actionable work found, new items awaiting the user's triage, or a quiet
+  report.
+- Watches CI and comments on **all PRs in its stack**, and performs all
+  **triage** (the trigger sections below): deciding whether what the sweep
+  found is real, and acting on it.
 - On a confirmed trigger on any PR in the stack: runs the **standard change
   procedure** — a full-stack cascade — in its own isolated worktree. Fixes within
   a stack are inherently serial (one agent); fixes across stacks run in parallel.
@@ -131,10 +153,42 @@ watching is not continuous.
   load-bearing: **ending a turn is termination, not a pause** — no monitor or
   notification will wake a finished agent. Wait on long operations (installs,
   CI runs) synchronously inside the turn. The only legitimate turn-ending
-  outputs are the full report template or an explicit escalation; anything
-  else is abandoned work-in-progress.
+  outputs are the full report template, a quiet report, or an explicit
+  escalation; anything else is abandoned work-in-progress. Delivering a
+  report is what makes dormancy safe — root's pass is the only thing that
+  wakes a dormant watcher, and it can only wake what reported cleanly.
+- Dormancy preserves context; respawn does not — and GitHub state is
+  authoritative either way. Derive pending work from the ledger rather than
+  trusting memory, and re-verify anything your brief tells you before acting
+  on it; briefs go stale between passes.
 - **If an operation is blocked by a safety classifier**, stop and follow
   "Safety-classifier blocks" below.
+
+**The sweep (every watcher, every wake).** Detection is **stateless**:
+pending work is defined by GitHub's own record, never by anything an agent
+remembers. A qualifying item (trigger 3) with **no agent response after it**
+is pending; red CI and conflicts are current-state checks. This works because
+the inline reply this skill mandates is load-bearing — the reply *is* the
+completion marker. Sweep everything open, every time: over-sweeping costs
+tokens, under-sweeping is a missed instruction, and re-deriving the pending
+set from scratch is what makes watcher death and respawn lossless.
+
+Feedback lives on three surfaces, plus one signal that no PR-level field
+reflects; sweep all four every time:
+
+- `pulls/{n}/reviews` — a review submitted with only a body (a COMMENT or
+  APPROVE with no inline comment) appears here and nowhere else
+- `pulls/{n}/comments` — inline review comments
+- `issues/{n}/comments` — conversation comments
+- **reactions on every comment** — a 👍 changes no PR-level field: not
+  `updatedAt`, not the head SHA, not `reviewDecision`, and comment listings
+  show only reaction *counts*. The delegation signal itself cannot be
+  detected by diffing state — re-enumerate reactions in full, every sweep.
+
+Non-qualifying feedback gets no reply and no action (trigger 3's silence
+rule), but new items land in the report up as *awaiting the user's triage* —
+the 👍 workflow only works if the user hears about what arrived. Root relays
+changes in that set, not the full snapshot each pass.
 
 **Safety-classifier blocks (any layer).** Any operation — a push, a comment
 post, even an agent spawn — may be denied by a pre-execution safety
@@ -146,7 +200,9 @@ classifier. Doctrine:
 - **One user-authorized retry is legitimate** — denials can be false
   positives, and an explicit user go is the sanctioned way to test that. A
   second identical denial is terminal for the session: park the item, report
-  it, and move on.
+  it, and move on. Root keeps the parked-items list and restates it in wake
+  briefs — a parked reply's thread stays pending on the ledger by definition,
+  and the list is what stops a fresh watcher from re-attempting it.
 - **Don't diagnose the gate from inside the session.** Denials are typically
   deterministic on the operation's *intent* and surface no reason. Editing
   policy files, spawning test agents, or A/B-ing wording burns turns, cannot
@@ -223,6 +279,11 @@ Reading `mergeable`:
   and referencing the commit. **Self-identify as an agent** so it's clear the user
   isn't the one responding — open with a prefix like
   `🤖 Claude, on <user>'s behalf:`.
+- **The reply is the ledger.** Detection derives "already handled" from the
+  presence of your self-identified reply — skip the reply and the item
+  re-detects as pending on every sweep, forever. This covers the user's own
+  instructions too: after acting on one, acknowledge it in-thread; the
+  acknowledgment is the completion marker, not a courtesy.
 - **Repo policy may forbid agent-authored comments — the label supersedes it.**
   Some repos' agent docs ban replying on a human's behalf. The
   `maintained-by:agent` label is the user's explicit, per-PR delegation, and
@@ -296,6 +357,7 @@ base to tip**, regardless of which PR triggered it:
      - human-gated checks encountered, by name, with the human action needed
        ("none" if none)
      - worktree disposition (removed, or retained and why)
+     - new items awaiting the user's triage ("none" if none)
      A report missing any of these is incomplete — root should bounce it back
      rather than chase details, and treats any non-template turn-ending output
      (a status line, a promise to resume when something completes) as
@@ -306,7 +368,10 @@ base to tip**, regardless of which PR triggered it:
      bootstrapped worktree is often multi-GB, and silently orphaned ones
      outlive the session. If you retain it (more triggers look imminent), say
      so in the report.
-   - Return to watching the resulting CI runs across the stack.
+   - Return to watching the resulting CI runs across the stack —
+     synchronously, within the turn: watch until the stack is quiet or a new
+     trigger fires, then report and terminate. Continuity beyond that is
+     the ledger — GitHub's own record — not your memory.
 
 ## Repo/environment specifics
 

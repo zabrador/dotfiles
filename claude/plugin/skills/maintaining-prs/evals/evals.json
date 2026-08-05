@@ -17,7 +17,7 @@
       "expected_output": "The agent waits on the install synchronously rather than terminating in expectation of an external wake-up; no completion report is emitted before validation actually ran.",
       "expectations": [
         "The chosen handling waits for the install synchronously (blocks on it before validating and reporting) rather than ending the turn and expecting a background monitor to wake the agent",
-        "turn-output.md does not claim or imply the agent will be notified or woken after its turn ends",
+        "turn-output.md does not rely on being notified or woken to resume the unfinished procedure; the install and validation are handled within the turn",
         "No completed-procedure report is produced before validation has actually run: any turn-ending text is explicitly work-in-progress, not the mandatory end-of-procedure report"
       ]
     },
@@ -68,8 +68,29 @@
       "expected_output": "Root schedules the recurring pass unprompted (the label is the delegation), runs the first pass immediately rather than waiting an interval, and keeps the schedule alive beyond quiet or all-green moments.",
       "expectations": [
         "A recurring root pass is scheduled in schedule.txt at a sensible interval (roughly 20 to 30 minutes) without asking the user for permission first; session-plan.md does not pose the schedule as a question awaiting the user's approval",
-        "The first pass happens immediately: the roster is processed and stack agents are spawned now (spawn-300.md and spawn-301.md exist) rather than deferred to the first scheduled interval",
+        "The first pass happens immediately rather than being deferred to the first scheduled interval: watchers are spawned for both stacks in this pass (spawn-300.md and spawn-301.md exist) — a quiet or merely mergeable stack still gets its watcher",
         "The plan keeps the recurring pass running while labeled PRs remain open; it does not stop the schedule once current work is done or everything is green"
+      ]
+    },
+    {
+      "id": 8,
+      "prompt": "You are a stack agent (watcher) under the maintaining-prs skill, owning the singleton stack of PR #88 (authored by the user zabrador, labeled maintained-by:agent) in a simulated session. Root has just woken you from dormancy to run your sweep. There is no real GitHub; first create these files to represent the API state, then act on them. pr-88-fields.json: updatedAt 2026-08-03T14:05:00Z, head SHA aaa111, mergeable MERGEABLE, reviewDecision null, CI green at head. pr-88-reviews.json: a single review by reviewer-carol, state COMMENT, submitted 2026-08-03T14:05:00Z, body asking for a cap on the retry loop, with no inline comments attached, no reactions, and no reply from anyone. pr-88-inline-comments.json: two threads — first, an inline comment by reviewer-dan from 2026-07-30 carrying a thumbs-up reaction from zabrador, with no reply after it; second, an inline comment by reviewer-eve from 2026-07-28 carrying a thumbs-up reaction from zabrador, followed by a reply from the agent account prefixed with the robot emoji, on zabrador's behalf, stating it was addressed in commit bbb222. pr-88-issue-comments.json: an empty list. Run your sweep and write findings.md covering what requires attention, and report.md with what you send up to root.",
+      "expected_output": "Pending work is derived from GitHub's own record: the delegated-but-unanswered comment is actionable, the delegated-and-answered one is not, the unreacted review body is surfaced for the user's triage, and no timestamp state is involved.",
+      "expectations": [
+        "findings.md flags reviewer-dan's thumbs-up-delegated comment as pending actionable work because no agent reply follows it — the absence of a response is what marks it pending",
+        "findings.md treats reviewer-eve's comment as already handled because a self-identified agent reply follows it, and does not queue it for re-work",
+        "reviewer-carol's review body (no reactions, not authored by the user) is not treated as actionable, but it is surfaced in report.md as new feedback awaiting the user's triage rather than dropped",
+        "Detection is derived from GitHub state — qualifying items without an agent response — not from a timestamp watermark or wall-clock cutoff"
+      ]
+    },
+    {
+      "id": 9,
+      "prompt": "You are the root agent under the maintaining-prs skill in a simulated session, running a recurring pass. Stack state: PR #90, labeled maintained-by:agent, MERGEABLE, CI green at head, not a draft, blocked only by a human-gated check that needs a release admin's manual approval. Its watcher agent delivered a quiet report last pass and went dormant. Spawning a fresh agent costs roughly 55,000 tokens; waking a dormant one is cheap. Decide how this pass handles PR #90 and write pass-plan.md, listing exactly what you do, which data you handle in your own context, and what you would do if the watcher does not respond.",
+      "expected_output": "Root wakes the dormant watcher rather than spawning fresh, skipping, or sweeping in its own context; a non-responsive watcher is respawned, with nothing lost because pending work is re-derived from GitHub state.",
+      "expectations": [
+        "pass-plan.md wakes the dormant watcher to run its sweep rather than spawning a fresh agent, skipping the stack, or letting PR-level quietness stand in for a sweep",
+        "Root does not run the feedback sweep in its own context: the reviews, comments, and reactions sweep is the woken watcher's job, and root handles only the roster and the watcher's report",
+        "A watcher that does not respond to the wake is treated as dead and respawned, not silently dropped — and losing it loses nothing, because pending work is re-derived from GitHub state rather than from agent memory"
       ]
     }
   ]

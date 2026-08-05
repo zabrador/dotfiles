@@ -94,10 +94,11 @@ skills.
 **Owns:**
 - Opt-in scope via the `maintained-by:agent` label; the label is the user's
   delegation and only the user touches it
-- The two-layer orchestration model: root agent as pure scheduler and sole
-  voice to the user, running the recurring pass (fetch → reconstruct →
-  reconcile) on an unattended 20–30 minute cadence; one stack agent per stack
-  doing all real work
+- The two-layer orchestration model: root agent as roster-keeper and waker
+  of watchers, sole voice to the user, running the recurring pass (fetch →
+  reconstruct → reconcile-and-wake) on an unattended 20–30 minute cadence;
+  one dormant-but-wakeable stack agent per stack owning detection, triage,
+  and all mutation
 - The stack as the unit of ownership and mutation (singleton stacks for
   independent PRs)
 - The three triggers (confirmed-real red CI, conflicts/dirty history,
@@ -458,6 +459,71 @@ everything is green recreates the missed-label failure it exists to prevent.
 On surfaces without a scheduling mechanism, the pass runs per-invocation and
 the user is told watching is not continuous (a further partial answer to the
 agent-architecture open question).
+
+**Root schedules *and detects*; "pure scheduler" superseded.**
+The stateless pass plus termination semantics left "what is new?" with no
+owner: stack agents die with their memory, so a 2026-08-04 session improvised
+a wall-clock cutoff and missed a user instruction for an hour — and three
+approvals entirely, because the reviews endpoint was never polled. The pass
+gains a Detect step: a root-persisted watermark and a mandatory four-surface
+sweep (review bodies, inline comments, conversation comments, reactions — the
+last because a 👍, the delegation signal itself, changes no PR-level field).
+Root may also run quiet-stack confirmation itself rather than spawning a
+~55k-token agent to observe nothing changed — a deliberate revision of "root
+as pure scheduler": root schedules and detects, strictly read-only; stack
+agents keep all mutation and all trigger response, and the sweep contract is
+identical wherever it runs (trimming it to head SHA/mergeable/CI is the named
+failure). The watermark bounds the sweep only from below — acting is
+qualification-gated, so over-sweeping is tokens and under-sweeping is a
+missed instruction; first pass or lost state means sweep everything open.
+Deltas are handed into spawn briefs with their watermark stated, and agents
+re-verify before acting — the session's stale skip-list brief was caught only
+because the agent didn't trust it.
+
+**Detection lives in dormant-but-wakeable watchers; root sweeps nothing.**
+*Supersedes the "root schedules and detects" entry above and its quiet-stack
+no-spawn rule, same day, before either shipped.* Root-side detection had a
+context flaw caught in review: N stacks × four surfaces every 20–30 minutes
+lands every sweep in a session-long context — root drowns, and a root that
+compacts is a scheduler that forgets. The invariant that survives
+relocation: **sweep outputs land in disposable contexts; long-lived contexts
+hold only watermarks and deltas.** Mechanism: root wakes dormant watchers
+each pass (context intact), chosen over self-pacing sleep loops (assumes
+indefinite idling, and a crashed watcher looks identical to a sleeping one)
+and over per-pass disposable detectors (a spawn of overhead every pass, and
+detection leaves stack ownership). Wake-based liveness is the load-bearing
+detail — the hole this model opens is dead-watcher blindness, and a wake
+with no response closes it: respawn with the last reported watermark. The
+quiet-stack economics resolve to "dormant, not dead": watchers are woken,
+not respawned, so the no-spawn rule is moot and every in-scope stack keeps
+its watcher. The watermark discipline and four-surface sweep contract are
+unchanged, relocated into the watcher; the turn-ending doctrine gains its
+one legitimate quiet exit — a report is what makes dormancy safe to wake.
+
+**Detection is stateless: GitHub is the ledger; the watermark is gone.**
+*Supersedes the watermark mechanics in the watcher entry above, same day.*
+Two things killed the watermark. First, the reactions rule had already
+hollowed it out: a 👍 can land on an old comment and comment listings carry
+only reaction counts, so every sweep must re-enumerate every comment anyway —
+the watermark bounded almost nothing. Second, it had a seen≠handled gap: it
+advances when the sweep completes, not when the work completes, so a watcher
+dying between sweep and action strands the item below the bound. The
+replacement was already mandated by trigger 3: the self-identified inline
+reply. Pending = a qualifying item with no agent response after it; red CI
+and conflicts were always current-state checks. Handled-ness now lives in
+durable, shared, self-healing state — unhandled work keeps re-surfacing
+until it is actually handled. Consequences: the reply is load-bearing, not
+courtesy (the user's own instructions get in-thread acknowledgments for
+exactly this reason); root's context shrinks to roster + liveness + the
+parked-items list (the one exception state — a classifier-parked reply stays
+pending on the ledger, and the list stops fresh watchers from re-attempting
+it); watcher respawn is lossless by construction; the first-sweep special
+case disappears. The rewritten eval cases passed against the watermark skill
+(29/29 red), so this change is design-motivated, not eval-motivated — the
+cases guard the ledger semantics rather than prove the watermark was
+misbehaving. Category lesson, noted twice this project now: before building
+a custom state mechanism, check whether durable native state already encodes
+what it would track.
 
 ## Open questions
 
