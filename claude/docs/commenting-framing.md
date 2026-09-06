@@ -119,6 +119,10 @@ machine-authored failures the skill is built to catch:
   case list, or another module's behaviour. Prose has no compiler.
 - **Section labels posing as summaries.** `// Validate the input` above
   a validation block. Same abstraction level as the code.
+- **Articulate but insufficient.** A long, careful docblock that argues
+  the design and never states the contract. The dominant miss on a
+  thoughtfully commented codebase; opposite of careless slop, and
+  independent of volume.
 
 ## The twelve principles
 
@@ -133,9 +137,12 @@ context is where shared knowledge is wrongly assumed. (3) Assert only
 what can be sourced; otherwise write nothing or mark it unverified.
 
 **Interface comments.** (4) A caller must be able to use the function
-without reading the body. (5) No implementation leakage — would this
-survive a total rewrite of the body? (6) Summary always; tags only when
-they add what the type does not.
+without reading the body. The test produces an artifact: from the
+docblock and signature alone, state what the caller gets and what the
+exposed edge values mean. "Cover the body; is it sufficient?" cannot
+fail once you have read the body. (5) No implementation leakage — would
+this survive a total rewrite of the body? (6) Summary always; tags only
+when they add what the type does not.
 
 **Implementation comments.** (7) Precision or external fact; higher-level
 summary is the rare exception; never how. (8) Precision facts are the
@@ -173,19 +180,27 @@ principle 7 license block summaries.
 ### Volume policy
 
 Calibration, not truth, recorded separately for that reason.
+Verbosity and insufficiency are independent axes, not one dial.
 
-- **Interface comments: near-universal.** Every function gets at least a
-  brief TSDoc summary. The failure mode is tag inflation, which
-  principle 6 handles.
+- **Interface comments: a contract, near-universally.** Every function
+  gets a TSDoc summary that passes gate 4. Tag inflation is still the
+  over-production failure; a restated name or a design essay with no
+  contract is under-effort however long it is.
 - **Implementation comments: sparse.** Bias toward fewer than the sources
   would suggest, because the observed failure is over-production.
 
-A helper with a single summary line and no tags is the intended output.
+A helper with a single summary line and no tags is the intended output —
+provided the summary is a contract, not a restated name.
 
 ## How to engage
 
 - **Do not reopen the scope cuts.** Prose, personal voice, documentation
   formats, and a design-notes system are out.
+- **Presence is not a pass.** Do not restore "every function gets a
+  summary" as a coverage lint. Gate 4 runs first when judging existing
+  comments; missing and present-but-insufficient both fail.
+- **Do not add a named audit mode.** Scope is the work you were asked
+  to do — a diff, a file, a package.
 - **Do not add "write the comments first" as a workflow.** The skill
   assumes the code exists. The anti-narration work is done by gates 1
   and 3 and principle 5.
@@ -257,3 +272,28 @@ does not author a design-notes file.
 **Q4 — No comment-density target per file.**
 A numeric target would be gameable and wrong. Volume is the interface /
 implementation split above.
+
+**Field test: the skill was a coverage pass because it was written as
+one.**
+First real use was an audit of existing comments. The agent counted
+whether comments existed. Cause: nine of ten tests are rejection
+filters; gate 4's old test ("cover the implementation; is it
+sufficient?") cannot fail after you have read the body; "Reviewing a
+diff" licensed "exported functions missing a summary" as the one check
+on untouched code; Volume sat on the first screen as a bright-line
+coverage rule; every Bad example was careless slop, so a thoughtful
+codebase looked like someone else's problem. Recalibration: presence is
+not a pass; verbosity and insufficiency are independent; gate 4
+produces an artifact and runs first when judging; review scope is
+whatever you were asked to look at, and the exception is "fails gate 4"
+not "has no `/** */`"; the long design-essay-with-no-contract is a
+first-class Bad; the Good leads with the contract and does not keep
+the essay. Three quality evals sit beside the generation cases (essay,
+present-but-empty, audit of a finished file). Do not add a third named
+mode. Do not treat "keep the essay, prepend a contract" as the fix.
+
+**Plugin `version` is the `/plugin update` signal.**
+Claude compares installed version to `plugin.json`. Shipping a new
+skill or a material skill revision without bumping it makes
+`/plugin update` a no-op. Bump the minor for additive or recalibrating
+skill changes.

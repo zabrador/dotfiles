@@ -4,6 +4,8 @@
   { "query": "Review the comments in this diff", "should_trigger": true },
   { "query": "The comments here are noisy, clean them up", "should_trigger": true },
   { "query": "Document this exported function", "should_trigger": true },
+  { "query": "Audit the comments in this package", "should_trigger": true },
+  { "query": "Are these existing docblocks sufficient?", "should_trigger": true },
   { "query": "Write a README for this package", "should_trigger": false },
   { "query": "Address the review comments on my PR", "should_trigger": false },
   { "query": "Commit this change", "should_trigger": false },

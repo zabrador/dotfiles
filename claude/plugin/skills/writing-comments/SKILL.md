@@ -1,6 +1,6 @@
 ---
 name: writing-comments
-description: The standard for what a good code comment looks like — TSDoc/docblocks and implementation comments. Use this skill whenever writing, editing, reviewing, or removing comments in code; whenever adding TSDoc or JSDoc to a function, type, or module; whenever asked to document a function or explain existing code in comments; and whenever reviewing a diff for comment quality. This skill judges comments only. It does not govern README structure, ADRs, or other documentation formats, and it does not apply to pull-request review comments or commit messages.
+description: The standard for what a good code comment looks like — TSDoc/docblocks and implementation comments. Use this skill whenever writing, editing, reviewing, auditing, or removing comments in code; whenever judging whether existing TSDoc or JSDoc is sufficient; whenever adding TSDoc to a function, type, or module; and whenever asked to document a function or review comments for quality. Presence is not success — apply this skill to comments that already exist, not only to missing ones. This skill judges comments only. It does not govern README structure, ADRs, or other documentation formats, and it does not apply to pull-request review comments or commit messages.
 ---
 
 This skill defines the standard a code comment must meet — TSDoc on
@@ -12,10 +12,23 @@ A comment is untyped, untested, invisible to refactoring, and
 unverifiable. It is the least durable thing in the file. Absence of an
 implementation comment is the correct outcome for most blocks.
 
-**Volume.** Every function gets a brief TSDoc summary. Tags appear only
-when they add what the type does not. Implementation comments stay
-sparse. A helper with one summary line and no tags is the intended
-output, not under-effort.
+Presence is not a pass. A file where every export has a one-line
+restatement of its name fails. Verbosity and insufficiency are
+independent — a docblock can be both at once. A docblock that explains
+why the code is this way but never says what a caller gets is
+under-effort however long it is.
+
+**Volume.** Interface comments: a brief TSDoc summary that passes gate 4.
+Tags appear only when they add what the type does not. Implementation
+comments stay sparse. A helper with one summary line and no tags is the
+intended output, not under-effort — provided the summary is a contract,
+not a restated name.
+
+When judging existing comments, run gate 4 first on every exported
+symbol in scope, then the rejection gates on each comment. Scope is
+whatever you were asked to look at: a diff, a file, a package. When
+writing new comments, write the contract (gate 4), then run gates 1–3
+on whatever else you were about to add.
 
 Each principle is a test with an answer. If the test has no answer, do
 not write the comment.
@@ -100,7 +113,10 @@ headers.delete("host");
 A caller must be able to use the function correctly without reading the
 body.
 
-*Test: cover the implementation. Is the docblock sufficient?*
+*Test: from the docblock and the signature alone — not the body — state
+what the caller gets, and what the edge values the signature already
+exposes mean (null, empty, throws). If you needed the body for any of
+that, the docblock fails.*
 
 ```ts
 // Bad — restates the name
@@ -109,6 +125,28 @@ export async function getUser(id: UserId): Promise<User | null>
 
 // Good — the contract the signature does not carry
 /** Returns the user, or `null` if they have been deleted. */
+export async function getUser(id: UserId): Promise<User | null>
+```
+
+```ts
+// Bad — articulate, and still insufficient: argues the design, never
+// states the contract. Do not keep the essay and prepend a sentence.
+/**
+ * We used to hit the identity service on every request. That stampeded
+ * it during login spikes, so a cache sits in front now and the store
+ * is the source of truth. The cache is safe to drop if this moves
+ * behind the edge worker. Callers should use this helper rather than
+ * the store so eviction stays centralized. A miss still goes to the
+ * store; a hit returns whatever was last written.
+ */
+export async function getUser(id: UserId): Promise<User | null>
+
+// Good — contract first. One caller-facing fact may stay; the design
+// argument leaves the file.
+/**
+ * Returns the user, or `null` if they have been deleted.
+ * The result may be stale relative to the store.
+ */
 export async function getUser(id: UserId): Promise<User | null>
 ```
 
@@ -274,22 +312,26 @@ Raise the smell in the conversation or PR, not in the comment: this
 signature conflates cache lookup with fetch; the caller cannot tell
 which they got.
 
-## Reviewing a diff
+## Reviewing comments
 
-Apply the gates to every comment the diff adds or edits. Delete comments
-that fail. Strip tags that restate the signature. Replace diff-relative
-wording ("now", "new", "changed to", "updated to") with a durable
-reference or with nothing.
+Scope is whatever you were asked to look at: a diff, a file, a package.
+For each exported symbol in that scope, run gate 4 first — absent and
+present-but-insufficient both fail. Then apply the rejection gates to
+every comment in scope. Delete comments that fail. Strip tags that
+restate the signature. Replace diff-relative wording ("now", "new",
+"changed to", "updated to") with a durable reference or with nothing.
 
 Do not add comments to unchanged code just because it is uncommented,
-except for exported functions missing a summary. Do not leave
+except for exported symbols whose docblock fails gate 4. Do not leave
 commented-out code.
 
 ## What not to do
 
+- Do not treat a present docblock as a pass. Judge the contract.
 - Do not invent a why. Silence beats a plausible story.
 - Do not comment language mechanics, restated names, or section labels.
 - Do not put implementation details in a docblock.
+- Do not keep a design essay and prepend a contract sentence.
 - Do not write comments from the perspective of the change.
 - Do not use a comment where a rename or a type would do.
 - Do not require comments to be written before the body. Judge them
