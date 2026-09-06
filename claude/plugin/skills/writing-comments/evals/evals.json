@@ -1,0 +1,76 @@
+{
+  "skill_name": "writing-comments",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Create getUser.ts containing exactly this TypeScript, then add comments as you would for a real review:\n\nexport type UserId = string & { readonly brand: 'UserId' };\nexport type User = { id: UserId; email: string };\n\nconst cache = new Map<UserId, User>();\n\nexport async function getUser(id: UserId): Promise<User | null> {\n  const cached = cache.get(id);\n  if (cached) return cached;\n  const row = await db.users.findById(id);\n  if (!row) return null;\n  cache.set(id, row);\n  return row;\n}\n\n// assume db exists\ndeclare const db: { users: { findById(id: UserId): Promise<User | null> } };\n\nDo not change the behavior.",
+      "expected_output": "A TSDoc summary that states the caller-facing contract (null means deleted / not found) without mentioning the cache or the database, and without @param/@returns tags that restate the signature.",
+      "expectations": [
+        "getUser has a TSDoc summary",
+        "The docblock does not mention the cache, Redis, Map, or the database / Postgres / query",
+        "There is no @param or @returns tag whose text only restates the parameter or return type",
+        "The function body is not narrated with same-level comments (no 'check the cache', 'query the database', 'return the row')"
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "Create roles.ts containing exactly this TypeScript, then add whatever comments you think it needs:\n\nexport type Role = { id: string; name: string };\n\nconst ALLOWED_ROLES: Role[] = [\n  { id: 'admin', name: 'Admin' },\n  { id: 'member', name: 'Member' },\n  { id: 'guest', name: 'Guest' }\n];\n\nexport function roleById(id: string): Role | undefined {\n  const byId = new Map(ALLOWED_ROLES.map((role) => [role.id, role]));\n  return byId.get(id);\n}\n\nDo not change the behavior.",
+      "expected_output": "A brief TSDoc on roleById. No invented performance rationale for the Map. No implementation narration.",
+      "expectations": [
+        "roleById has a TSDoc summary",
+        "No comment claims O(1) lookup, performance, hashing, or that a Map was chosen for speed",
+        "No comment restates that the function looks up a role by id in a way that only repeats the code"
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "Create fetchHeaders.ts containing this TypeScript and the existing comments, then fix the comments:\n\nexport function prepareHeaders(headers: Headers): void {\n  // Now uses the new header policy\n  // changed to handle the host case\n  headers.delete('host');\n}\n\nThe reason host is deleted is a node-fetch bug: redirect + custom Host is dropped (node-fetch#1767). Do not change the behavior.",
+      "expected_output": "Diff-relative comments are gone. A sourced comment remains, or the constraint is stated without 'now' / 'new' / 'changed to'.",
+      "expectations": [
+        "Comments containing 'now', 'new', 'changed to', or 'updated to' are gone",
+        "A remaining comment, if any, mentions the node-fetch issue or the redirect/Host constraint in a way that a reader who never saw this edit can understand",
+        "Behavior is unchanged: the function still deletes the host header"
+      ]
+    },
+    {
+      "id": 4,
+      "prompt": "Create signup.ts containing this TypeScript, then add comments:\n\nexport function assertEmail(email: string): void {\n  if (email.trim() === '' || !email.includes('@')) {\n    throw new Error('invalid email');\n  }\n}\n\nexport function register(email: string): void {\n  assertEmail(email);\n  users.insert({ email });\n}\n\ndeclare const users: { insert(row: { email: string }): void };\n\nDo not change the behavior.",
+      "expected_output": "TSDoc summaries on the functions. No section-label implementation comments. assertEmail's comment, if it adds precision, may say empty and whitespace-only are both invalid.",
+      "expectations": [
+        "assertEmail and register each have a TSDoc summary",
+        "There is no implementation comment that only labels a step (such as 'Validate the input' or 'Insert the user')",
+        "No @param tags that only restate 'the email'"
+      ]
+    },
+    {
+      "id": 5,
+      "prompt": "Create jobs.ts containing this TypeScript, then add comments:\n\nexport type JobStatus = 'queued' | 'running' | 'done' | 'failed';\n\nexport function handle(status: JobStatus): void {\n  if (status === 'done' || status === 'failed') return;\n  run(status);\n}\n\ndeclare function run(status: JobStatus): void;\n\nDo not change the behavior.",
+      "expected_output": "A TSDoc on handle that does not enumerate every JobStatus case. It may name the terminal-state rule and point at the type.",
+      "expectations": [
+        "handle has a TSDoc summary",
+        "No comment lists all four JobStatus values as the definition of the union",
+        "If a comment mentions terminal states, it does not claim the union has only those states"
+      ]
+    },
+    {
+      "id": 6,
+      "prompt": "Create range.ts containing this TypeScript, then add comments:\n\nexport function sliceRange(start: number, end: number): number[] {\n  const out: number[] = [];\n  for (let i = start; i < end; i++) out.push(i);\n  return out;\n}\n\nThe range is inclusive at start and exclusive at end, same as String.slice. Do not change the behavior.",
+      "expected_output": "A TSDoc (or declaration comment) that states inclusive/exclusive bounds. No tags that only say start and end are numbers.",
+      "expectations": [
+        "A comment states that start is inclusive and end is exclusive, or equivalent",
+        "There is no @param tag whose text is only 'the start' / 'the end' / 'the start number' / 'the end number'",
+        "No implementation comments narrate the for-loop"
+      ]
+    },
+    {
+      "id": 7,
+      "prompt": "Create lookup.ts containing this TypeScript, then add comments. Do not change the behavior.\n\nexport type UserId = string & { readonly brand: 'UserId' };\nexport type User = { id: UserId; email: string };\n\nconst cache = new Map<UserId, User>();\n\nexport function getUser(id: UserId): User | null {\n  const cached = cache.get(id);\n  if (cached !== undefined) return cached;\n  return loadUser(id);\n}\n\ndeclare function loadUser(id: UserId): User | null;\n\nThe function sometimes returns a cached value and sometimes loads; callers cannot tell which.",
+      "expected_output": "Honest caller-facing TSDoc that states the cache-vs-load hedge and the stale-result implication. No 'needs to be refactored' / 'this should be redesigned' footer in the file. The design smell is raised in the agent's report, not in the comment.",
+      "expectations": [
+        "getUser has a TSDoc summary that a caller can use without reading the body",
+        "The docblock does not contain 'refactor', 'redesign', 'needs to be', or 'probably should'",
+        "The executor's report or final message mentions that the signature is strained or conflates cache lookup with fetch (or equivalent), outside the file"
+      ]
+    }
+  ]
+}
