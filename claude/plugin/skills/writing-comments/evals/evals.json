@@ -7,7 +7,7 @@
       "expected_output": "A TSDoc summary that states the caller-facing contract (null means deleted / not found) without mentioning the cache or the database, and without @param/@returns tags that restate the signature.",
       "expectations": [
         "getUser has a TSDoc summary that states what null means (deleted, not found, or equivalent)",
-        "The docblock does not mention the cache, Redis, Map, or the database / Postgres / query",
+        "The docblock does not mention the cache, Redis, Map, the database, Postgres, a query, or the store. A freshness or staleness claim counts as leaking the cache.",
         "There is no @param or @returns tag whose text only restates the parameter or return type",
         "The function body is not narrated with same-level comments (no 'check the cache', 'query the database', 'return the row')"
       ]
@@ -75,11 +75,12 @@
     {
       "id": 8,
       "prompt": "Create getUser.ts containing exactly this TypeScript, including the existing docblock, then review and fix the comments. Do not change the behavior.\n\nexport type UserId = string & { readonly brand: 'UserId' };\nexport type User = { id: UserId; email: string };\n\nconst cache = new Map<UserId, User>();\n\n/**\n * We used to hit the identity service on every request. That stampeded\n * it during login spikes, so a cache sits in front now and the store\n * is the source of truth. The cache is safe to drop if this moves\n * behind the edge worker. Callers should use this helper rather than\n * the store so eviction stays centralized. A miss still goes to the\n * store; a hit returns whatever was last written.\n */\nexport async function getUser(id: UserId): Promise<User | null> {\n  const cached = cache.get(id);\n  if (cached) return cached;\n  const row = await db.users.findById(id);\n  if (!row) return null;\n  cache.set(id, row);\n  return row;\n}\n\ndeclare const db: { users: { findById(id: UserId): Promise<User | null> } };",
-      "expected_output": "The design essay is gone. The docblock leads with the caller contract (null meaning). At most one caller-facing fact (e.g. possible staleness) remains. The essay is not kept with a contract sentence prepended.",
+      "expected_output": "The design essay is gone. The docblock leads with the caller contract (null meaning). The essay is not kept with a contract sentence prepended. Do not replace the essay with a staleness/cache hedge.",
       "expectations": [
         "The docblock states what the caller gets and what null means, using only the docblock and signature (no need to read the body for that)",
         "The docblock no longer contains the identity-service / login-spikes / edge-worker / eviction design argument",
         "The docblock is not the original essay with a contract sentence added at the top",
+        "The docblock does not mention staleness, the cache, or the store",
         "Behavior is unchanged: getUser still cache-then-store and returns null when missing"
       ]
     },

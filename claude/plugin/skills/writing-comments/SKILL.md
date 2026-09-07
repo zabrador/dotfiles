@@ -141,12 +141,8 @@ export async function getUser(id: UserId): Promise<User | null>
  */
 export async function getUser(id: UserId): Promise<User | null>
 
-// Good — contract first. One caller-facing fact may stay; the design
-// argument leaves the file.
-/**
- * Returns the user, or `null` if they have been deleted.
- * The result may be stale relative to the store.
- */
+// Good — contract first. The design argument leaves the file.
+/** Returns the user, or `null` if they have been deleted. */
 export async function getUser(id: UserId): Promise<User | null>
 ```
 
@@ -154,7 +150,10 @@ export async function getUser(id: UserId): Promise<User | null>
 
 A docblock mentioning the cache, the retry loop, or the query is
 contaminated. It over-promises, couples callers to internals, and rots
-on the first refactor.
+on the first refactor. A freshness or staleness claim is the cache
+leaking unless the function's job is "possibly cached" — that hedge
+belongs on a strained signature (principle 12), not on an ordinary
+lookup.
 
 *Test: would this comment survive a total rewrite of the body?*
 
