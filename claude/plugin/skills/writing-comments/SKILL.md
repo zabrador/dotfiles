@@ -116,19 +116,30 @@ body.
 *Test: from the docblock and the signature alone — not the body — state
 what the caller gets, and what the edge values the signature already
 exposes mean (null, empty, throws). If you needed the body for any of
-that, the docblock fails.*
+that, the docblock fails. A three-line `@example` call site is the
+TypeScript check when a sentence is not enough.*
 
-```ts
+````ts
 // Bad — restates the name
 /** Get the user. */
 export async function getUser(id: UserId): Promise<User | null>
 
-// Good — the contract the signature does not carry
-/** Returns the user, or `null` if they have been deleted. */
+// Good — contract the signature does not carry. `@example` when a
+// caller would still have to guess the edge case; not a replay of
+// `getUser(id)`.
+/**
+ * Returns the user, or `null` if they have been deleted.
+ *
+ * @example
+ * ```ts
+ * const user = await getUser(id);
+ * if (user === null) return;
+ * ```
+ */
 export async function getUser(id: UserId): Promise<User | null>
-```
+````
 
-```ts
+````ts
 // Bad — articulate, and still insufficient: argues the design, never
 // states the contract. Do not keep the essay and prepend a sentence.
 /**
@@ -141,10 +152,18 @@ export async function getUser(id: UserId): Promise<User | null>
  */
 export async function getUser(id: UserId): Promise<User | null>
 
-// Good — contract first. The design argument leaves the file.
-/** Returns the user, or `null` if they have been deleted. */
+// Good — contract first, then a call site. The design argument leaves.
+/**
+ * Returns the user, or `null` if they have been deleted.
+ *
+ * @example
+ * ```ts
+ * const user = await getUser(id);
+ * if (user === null) return;
+ * ```
+ */
 export async function getUser(id: UserId): Promise<User | null>
-```
+````
 
 ### 5. No implementation leakage
 
@@ -196,6 +215,39 @@ export async function getUser(id: UserId): Promise<User | null>
  */
 export function wait(timeoutMs: number): Promise<void>
 ```
+
+## TypeScript
+
+The type is the first comment. Do not write JSDoc type annotations
+(`@param {string} id`) in `.ts` files. Do not `@param` a name the
+signature already typed. That is Effective TypeScript Item 31, and
+it is principle 6 with a TypeScript name.
+
+A branded id, a discriminated union, or a `readonly` parameter
+replaces prose that would have enumerated the same fact.
+
+`@example` is the TypeScript-native sufficiency check. If you cannot
+write a three-line call site from the docblock and signature, gate 4
+failed. A contract sentence plus an `@example` is the shape to copy
+from type-fest. Keep the ` * ` gutter on every line of a multiline
+block — type-fest omits it; we do not:
+
+````ts
+/**
+ * Make the given keys required; leave the rest as they are.
+ *
+ * @example
+ * ```ts
+ * type Draft = { id: UserId; email?: string };
+ * type Ready = SetRequired<Draft, "email">;
+ * // => { id: UserId; email: string }
+ * ```
+ */
+export type SetRequired<T, K extends keyof T> = Omit<T, K> & Required<Pick<T, K>>;
+````
+
+Durable tags: `@deprecated`, `@see`, `{@link}`, `@example`. A
+`@param` or `@returns` that restates the signature is not.
 
 ## Implementation comments
 
@@ -331,6 +383,8 @@ commented-out code.
 - Do not comment language mechanics, restated names, or section labels.
 - Do not put implementation details in a docblock.
 - Do not keep a design essay and prepend a contract sentence.
+- Do not write JSDoc types (`@param {string}`) in `.ts` files.
+- Do not omit the ` * ` gutter on multiline TSDoc.
 - Do not write comments from the perspective of the change.
 - Do not use a comment where a rename or a type would do.
 - Do not require comments to be written before the body. Judge them

@@ -4,93 +4,116 @@
     {
       "id": 1,
       "prompt": "Create getUser.ts containing exactly this TypeScript, then add comments as you would for a real review:\n\nexport type UserId = string & { readonly brand: 'UserId' };\nexport type User = { id: UserId; email: string };\n\nconst cache = new Map<UserId, User>();\n\nexport async function getUser(id: UserId): Promise<User | null> {\n  const cached = cache.get(id);\n  if (cached) return cached;\n  const row = await db.users.findById(id);\n  if (!row) return null;\n  cache.set(id, row);\n  return row;\n}\n\n// assume db exists\ndeclare const db: { users: { findById(id: UserId): Promise<User | null> } };\n\nDo not change the behavior.",
-      "expected_output": "A TSDoc summary that states the caller-facing contract (null means deleted / not found) without mentioning the cache or the database, and without @param/@returns tags that restate the signature.",
+      "expected_output": "A TSDoc contract that states what null means, plus an @example call site that exercises the null case (not a replay of getUser(id)). No cache/store leak, no JSDoc types, no restating tags. Multiline TSDoc uses a ' * ' gutter.",
       "expectations": [
         "getUser has a TSDoc summary that states what null means (deleted, not found, or equivalent)",
+        "The docblock includes an @example whose call site exercises the null case, not merely getUser(id)",
         "The docblock does not mention the cache, Redis, Map, the database, Postgres, a query, or the store. A freshness or staleness claim counts as leaking the cache.",
-        "There is no @param or @returns tag whose text only restates the parameter or return type",
+        "There is no JSDoc type annotation (no @param {, @returns {, or @type {) and no @param or @returns tag whose text only restates the signature",
+        "If the getUser docblock is multiline, each content line uses a ' * ' gutter, not flush-left body text after /**",
         "The function body is not narrated with same-level comments (no 'check the cache', 'query the database', 'return the row')"
       ]
     },
     {
       "id": 2,
       "prompt": "Create roles.ts containing exactly this TypeScript, then add whatever comments you think it needs:\n\nexport type Role = { id: string; name: string };\n\nconst ALLOWED_ROLES: Role[] = [\n  { id: 'admin', name: 'Admin' },\n  { id: 'member', name: 'Member' },\n  { id: 'guest', name: 'Guest' }\n];\n\nexport function roleById(id: string): Role | undefined {\n  const byId = new Map(ALLOWED_ROLES.map((role) => [role.id, role]));\n  return byId.get(id);\n}\n\nDo not change the behavior.",
-      "expected_output": "A brief TSDoc on roleById. No invented performance rationale for the Map. No implementation narration.",
+      "expected_output": "A TSDoc contract on roleById that states what a miss means, plus an @example of a miss. No invented Map performance rationale. No JSDoc types. Multiline uses a ' * ' gutter.",
       "expectations": [
         "roleById has a TSDoc summary that states what undefined / a miss means",
+        "The docblock includes an @example whose call site exercises a miss (undefined), not merely roleById(id)",
         "No comment claims O(1) lookup, performance, hashing, or that a Map was chosen for speed",
+        "There is no JSDoc type annotation (no @param {, @returns {, or @type {)",
+        "If the roleById docblock is multiline, each content line uses a ' * ' gutter, not flush-left body text after /**",
         "No comment restates that the function looks up a role by id in a way that only repeats the code"
       ]
     },
     {
       "id": 3,
       "prompt": "Create fetchHeaders.ts containing this TypeScript and the existing comments, then fix the comments:\n\nexport function prepareHeaders(headers: Headers): void {\n  // Now uses the new header policy\n  // changed to handle the host case\n  headers.delete('host');\n}\n\nThe reason host is deleted is a node-fetch bug: redirect + custom Host is dropped (node-fetch#1767). Do not change the behavior.",
-      "expected_output": "Diff-relative comments are gone. A sourced comment remains, or the constraint is stated without 'now' / 'new' / 'changed to'.",
+      "expected_output": "Diff-relative comments are gone. A sourced comment remains, or the constraint is stated without 'now' / 'new' / 'changed to'. No JSDoc types if a docblock is added. Multiline TSDoc uses a ' * ' gutter.",
       "expectations": [
         "Comments containing 'now', 'new', 'changed to', or 'updated to' are gone",
         "A remaining comment, if any, mentions the node-fetch issue or the redirect/Host constraint in a way that a reader who never saw this edit can understand",
+        "There is no JSDoc type annotation (no @param {, @returns {, or @type {)",
+        "If any TSDoc block is multiline, each content line uses a ' * ' gutter, not flush-left body text after /**",
         "Behavior is unchanged: the function still deletes the host header"
       ]
     },
     {
       "id": 4,
       "prompt": "Create signup.ts containing this TypeScript, then add comments:\n\nexport function assertEmail(email: string): void {\n  if (email.trim() === '' || !email.includes('@')) {\n    throw new Error('invalid email');\n  }\n}\n\nexport function register(email: string): void {\n  assertEmail(email);\n  users.insert({ email });\n}\n\ndeclare const users: { insert(row: { email: string }): void };\n\nDo not change the behavior.",
-      "expected_output": "TSDoc summaries on the functions. No section-label implementation comments. assertEmail's comment, if it adds precision, may say empty and whitespace-only are both invalid.",
+      "expected_output": "TSDoc contracts on both functions. assertEmail states when it throws, with an @example of an invalid input. No section-label implementation comments, no JSDoc types, no restating @param. Multiline uses a ' * ' gutter.",
       "expectations": [
         "assertEmail and register each have a TSDoc summary; assertEmail's states when it throws or what counts as invalid",
+        "assertEmail's docblock includes an @example that exercises an invalid input or a throw, not merely assertEmail(email)",
         "There is no implementation comment that only labels a step (such as 'Validate the input' or 'Insert the user')",
-        "No @param tags that only restate 'the email'"
+        "There is no JSDoc type annotation (no @param {, @returns {, or @type {) and no @param tag that only restates 'the email'",
+        "If any TSDoc block is multiline, each content line uses a ' * ' gutter, not flush-left body text after /**"
       ]
     },
     {
       "id": 5,
       "prompt": "Create jobs.ts containing this TypeScript, then add comments:\n\nexport type JobStatus = 'queued' | 'running' | 'done' | 'failed';\n\nexport function handle(status: JobStatus): void {\n  if (status === 'done' || status === 'failed') return;\n  run(status);\n}\n\ndeclare function run(status: JobStatus): void;\n\nDo not change the behavior.",
-      "expected_output": "A TSDoc on handle that does not enumerate every JobStatus case. It may name the terminal-state rule and point at the type.",
+      "expected_output": "A TSDoc contract on handle that states the terminal-state rule and does not list the union. An @example of a terminal status being ignored. No JSDoc types. Multiline uses a ' * ' gutter.",
       "expectations": [
         "handle has a TSDoc summary that states the terminal-state rule or equivalent contract, not merely the function name",
+        "The docblock includes an @example whose call site exercises a terminal status (done or failed), not merely handle(status)",
         "No comment lists all four JobStatus values as the definition of the union",
-        "If a comment mentions terminal states, it does not claim the union has only those states"
+        "If a comment mentions terminal states, it does not claim the union has only those states",
+        "There is no JSDoc type annotation (no @param {, @returns {, or @type {)",
+        "If the handle docblock is multiline, each content line uses a ' * ' gutter, not flush-left body text after /**"
       ]
     },
     {
       "id": 6,
       "prompt": "Create range.ts containing this TypeScript, then add comments:\n\nexport function sliceRange(start: number, end: number): number[] {\n  const out: number[] = [];\n  for (let i = start; i < end; i++) out.push(i);\n  return out;\n}\n\nThe range is inclusive at start and exclusive at end, same as String.slice. Do not change the behavior.",
-      "expected_output": "A TSDoc (or declaration comment) that states inclusive/exclusive bounds. No tags that only say start and end are numbers.",
+      "expected_output": "A comment that states inclusive/exclusive bounds, plus an @example whose result is only explained by that convention (e.g. sliceRange(1, 3) is [1, 2]). No restating @param, no JSDoc types, no loop narration. Multiline uses a ' * ' gutter.",
       "expectations": [
         "A comment states that start is inclusive and end is exclusive, or equivalent",
+        "The docblock includes an @example whose result depends on inclusive/exclusive bounds (not merely sliceRange(start, end))",
         "There is no @param tag whose text is only 'the start' / 'the end' / 'the start number' / 'the end number'",
+        "There is no JSDoc type annotation (no @param {, @returns {, or @type {)",
+        "If any TSDoc block is multiline, each content line uses a ' * ' gutter, not flush-left body text after /**",
         "No implementation comments narrate the for-loop"
       ]
     },
     {
       "id": 7,
       "prompt": "Create lookup.ts containing this TypeScript, then add comments. Do not change the behavior.\n\nexport type UserId = string & { readonly brand: 'UserId' };\nexport type User = { id: UserId; email: string };\n\nconst cache = new Map<UserId, User>();\n\nexport function getUser(id: UserId): User | null {\n  const cached = cache.get(id);\n  if (cached !== undefined) return cached;\n  return loadUser(id);\n}\n\ndeclare function loadUser(id: UserId): User | null;\n\nThe function sometimes returns a cached value and sometimes loads; callers cannot tell which.",
-      "expected_output": "Honest caller-facing TSDoc that states the cache-vs-load hedge and the stale-result implication. No 'needs to be refactored' / 'this should be redesigned' footer in the file. The design smell is raised in the agent's report, not in the comment.",
+      "expected_output": "Honest caller-facing TSDoc that states the cache-vs-load hedge and the stale-result implication, optionally with an @example that shows the caller cannot distinguish the path. No refactor footer in the file. The design smell is raised in the report. No JSDoc types. Multiline uses a ' * ' gutter.",
       "expectations": [
         "getUser has a TSDoc summary that a caller can use without reading the body",
         "The docblock does not contain 'refactor', 'redesign', 'needs to be', or 'probably should'",
+        "There is no JSDoc type annotation (no @param {, @returns {, or @type {)",
+        "If the getUser docblock is multiline, each content line uses a ' * ' gutter, not flush-left body text after /**",
         "The executor's report or final message mentions that the signature is strained or conflates cache lookup with fetch (or equivalent), outside the file"
       ]
     },
     {
       "id": 8,
       "prompt": "Create getUser.ts containing exactly this TypeScript, including the existing docblock, then review and fix the comments. Do not change the behavior.\n\nexport type UserId = string & { readonly brand: 'UserId' };\nexport type User = { id: UserId; email: string };\n\nconst cache = new Map<UserId, User>();\n\n/**\n * We used to hit the identity service on every request. That stampeded\n * it during login spikes, so a cache sits in front now and the store\n * is the source of truth. The cache is safe to drop if this moves\n * behind the edge worker. Callers should use this helper rather than\n * the store so eviction stays centralized. A miss still goes to the\n * store; a hit returns whatever was last written.\n */\nexport async function getUser(id: UserId): Promise<User | null> {\n  const cached = cache.get(id);\n  if (cached) return cached;\n  const row = await db.users.findById(id);\n  if (!row) return null;\n  cache.set(id, row);\n  return row;\n}\n\ndeclare const db: { users: { findById(id: UserId): Promise<User | null> } };",
-      "expected_output": "The design essay is gone. The docblock leads with the caller contract (null meaning). The essay is not kept with a contract sentence prepended. Do not replace the essay with a staleness/cache hedge.",
+      "expected_output": "The design essay is gone. Replace it with a contract (what null means) plus an @example of the null case — not the essay with a sentence prepended, and not a staleness/cache hedge. Multiline uses a ' * ' gutter. No JSDoc types.",
       "expectations": [
         "The docblock states what the caller gets and what null means, using only the docblock and signature (no need to read the body for that)",
+        "The docblock includes an @example whose call site exercises the null case, not merely getUser(id)",
         "The docblock no longer contains the identity-service / login-spikes / edge-worker / eviction design argument",
         "The docblock is not the original essay with a contract sentence added at the top",
         "The docblock does not mention staleness, the cache, or the store",
+        "There is no JSDoc type annotation (no @param {, @returns {, or @type {)",
+        "Each content line of the multiline TSDoc uses a ' * ' gutter, not flush-left body text after /**",
         "Behavior is unchanged: getUser still cache-then-store and returns null when missing"
       ]
     },
     {
       "id": 9,
       "prompt": "Create getUser.ts containing exactly this TypeScript, including the existing comments, then review and fix the comments. Do not change the behavior.\n\nexport type UserId = string & { readonly brand: 'UserId' };\nexport type User = { id: UserId; email: string };\n\n/**\n * Get the user.\n * @param id - The user ID\n * @returns The user or null\n */\nexport async function getUser(id: UserId): Promise<User | null> {\n  const row = await db.users.findById(id);\n  return row;\n}\n\ndeclare const db: { users: { findById(id: UserId): Promise<User | null> } };",
-      "expected_output": "The restatement and tag echo are gone. A contract-level summary remains (what null means). No new @param that only restates id.",
+      "expected_output": "The restatement and tag echo are gone. A contract (what null means) plus an @example of the null case remains. No JSDoc types. Multiline uses a ' * ' gutter.",
       "expectations": [
         "The remaining docblock states what null means, not merely 'get the user'",
+        "The docblock includes an @example whose call site exercises the null case, not merely getUser(id)",
         "There is no @param or @returns tag whose text only restates the parameter name or return type",
+        "There is no JSDoc type annotation (no @param {, @returns {, or @type {)",
+        "If the docblock is multiline, each content line uses a ' * ' gutter, not flush-left body text after /**",
         "The file still contains a TSDoc block on getUser (this is a rewrite, not a deletion of all documentation)",
         "Behavior is unchanged"
       ]
@@ -98,14 +121,30 @@
     {
       "id": 10,
       "prompt": "Create api.ts containing exactly this TypeScript, including every existing comment, then review the comments in the file. Judge what is already there. Do not add comments merely so every symbol has one. Do not change the behavior.\n\nexport type UserId = string & { readonly brand: 'UserId' };\nexport type User = { id: UserId; email: string };\nexport type JobStatus = 'queued' | 'running' | 'done' | 'failed';\nexport type Session = { id: string };\n\n/** Get the user. */\nexport async function getUser(id: UserId): Promise<User | null> {\n  return db.users.findById(id);\n}\n\n/** Looks up the session in Redis and retries the query twice. */\nexport function sessionFor(id: UserId): Session | undefined {\n  return sessions.get(id);\n}\n\n/** Terminal states (`done`, `failed`) are ignored; see `JobStatus`. */\nexport function handle(status: JobStatus): void {\n  if (status === 'done' || status === 'failed') return;\n  run(status);\n}\n\nexport function prepareHeaders(headers: Headers): void {\n  // Validate the input\n  // node-fetch#1767: redirect + custom Host is dropped. Remove when on undici.\n  headers.delete('host');\n}\n\ndeclare const db: { users: { findById(id: UserId): Promise<User | null> } };\ndeclare const sessions: { get(id: UserId): Session | undefined };\ndeclare function run(status: JobStatus): void;",
-      "expected_output": "Quality judgments, not a coverage count. getUser's restatement is rewritten to a contract. sessionFor no longer leaks Redis/retry. handle's existing contract is kept. The section label is deleted; the node-fetch comment stays.",
+      "expected_output": "Quality judgments, not a coverage count. getUser and sessionFor become contracts, each with an @example of the miss case. handle's existing contract may stay without a new example. The section label is deleted; the node-fetch comment stays. No JSDoc types. Multiline uses a ' * ' gutter.",
       "expectations": [
         "getUser's docblock is no longer just 'Get the user' and states what null means or an equivalent contract",
-        "sessionFor's docblock does not mention Redis, retry, or the query",
+        "getUser's docblock includes an @example whose call site exercises the null case, not merely getUser(id)",
+        "sessionFor's docblock does not mention Redis, retry, or the query, and states what undefined / a miss means",
+        "sessionFor's docblock includes an @example whose call site exercises a miss, not merely sessionFor(id)",
         "handle still has a comment stating that terminal states are ignored (or equivalent), pointing at JobStatus",
         "The '// Validate the input' comment is gone",
         "A comment remains that mentions node-fetch#1767 or the redirect/Host constraint",
+        "There is no JSDoc type annotation (no @param {, @returns {, or @type {)",
+        "If any rewritten TSDoc block is multiline, each content line uses a ' * ' gutter, not flush-left body text after /**",
         "The executor's report does not treat 'every export has a docblock' as the measure of success"
+      ]
+    },
+    {
+      "id": 11,
+      "prompt": "Create ids.ts containing exactly this TypeScript, including the existing comments, then review and fix the comments. Do not change the behavior.\n\nexport type UserId = string & { readonly brand: 'UserId' };\n\n/**\n * Get a user by id.\n * @param {string} id - The user ID\n * @returns {Promise<User | null>} The user or null\n */\nexport async function getUser(id: UserId): Promise<User | null> {\n  return db.users.findById(id);\n}\n\ndeclare const db: { users: { findById(id: UserId): Promise<{ id: UserId } | null> } };",
+      "expected_output": "JSDoc types are gone. The docblock is a contract (what null means) plus an @example of the null case, not a replay of getUser(id). Multiline TSDoc uses a ' * ' gutter.",
+      "expectations": [
+        "There is no JSDoc type annotation such as @param {string} or @returns {Promise",
+        "The remaining docblock states what null means, not merely 'get a user by id'",
+        "The docblock includes an @example whose call site exercises the null case, not merely getUser(id)",
+        "If the docblock is multiline, each content line begins with an asterisk gutter ( * ), not flush-left body text after /**",
+        "Behavior is unchanged"
       ]
     }
   ]

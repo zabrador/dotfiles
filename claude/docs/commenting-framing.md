@@ -96,6 +96,19 @@ cost.
 double-entry bookkeeping that refactoring tools don't help with, and
 delete commented-out code.
 
+**Dan Vanderkam, *Effective TypeScript*, Items 31 and 68.** Item 31
+(don't repeat type information in documentation) is principle 6 with a
+TypeScript name. Item 68 (use TSDoc on the public surface) is the
+volume policy. Not a codebase; the TypeScript-specific reference.
+
+**sindresorhus/type-fest.** Best open-source specimen of the shape:
+one contract sentence, then `@example` with real TypeScript, then
+`@see` / `{@link}`. `SetRequired` is the pattern. `Simplify` is the
+warning — it grows into the articulate essay. Steal the
+first-line-plus-example shape, not every paragraph, and not their
+flush-left body (no ` * ` gutter). We keep the conventional asterisk
+gutter.
+
 ## Failure-mode catalogue
 
 The sources address human authors, who fail differently. These are the
@@ -205,9 +218,13 @@ provided the summary is a contract, not a restated name.
   assumes the code exists. The anti-narration work is done by gates 1
   and 3 and principle 5.
 - **Examples in the skill are constructed TypeScript specimens** of the
-  failure catalogue, not yet sourced from a monorepo. Replace them with
-  real specimens when a package is marked up; do not invent a second
+  failure catalogue, shaped like type-fest (contract + `@example`)
+  with a conventional ` * ` gutter. Replace toys with monorepo
+  specimens when a package is marked up; do not invent a second
   parallel set.
+- **Do not add a TSDoc tag appendix.** Format is out. The TypeScript
+  surface is: no JSDoc types in `.ts`, the type is the first comment,
+  `@example` as the sufficiency check, durable tags only.
 - **No numeric comment-density target.** Gameable and wrong.
 - **Lint rules** (`eslint-plugin-jsdoc` for tag echo; a custom rule for
   diff-relative vocabulary) are independently useful and do not block
@@ -297,3 +314,10 @@ Claude compares installed version to `plugin.json`. Shipping a new
 skill or a material skill revision without bumping it makes
 `/plugin update` a no-op. Bump the minor for additive or recalibrating
 skill changes.
+
+**Type-fest shape, conventional gutter.**
+Do not turn the skill into a TSDoc tag guide. Add a thin TypeScript
+surface: no JSDoc types in `.ts`, the type is the first comment,
+`@example` as the gate-4 check when a sentence is not enough, durable
+tags only. Copy type-fest's contract-plus-example shape. Do not copy
+their flush-left body — multiline TSDoc keeps the ` * ` gutter.
