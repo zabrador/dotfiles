@@ -63,11 +63,11 @@ mkdir -p ~/.claude/skills
 
 # Remove anything that would collide with the skills Stow package; skills not
 # in the package are left alone.
-for skill in claude/plugin/skills/*/; do
+for skill in ai/plugin/skills/*/; do
   rm -rf ~/.claude/skills/"$(basename "$skill")"
 done
 
-stow skills --dir claude/plugin --target ~/.claude/skills
+stow skills --dir ai/plugin --target ~/.claude/skills
 echo "...Claude skills linked!"
 
 # --- Claude user settings -----------------------------------------------------
@@ -78,7 +78,7 @@ mkdir -p ~/.claude
 
 # Buffer through a variable: redirecting jq onto its own input would truncate
 # it before jq reads it. The && means a jq failure never writes.
-settings=$(jq '. * input' ~/.claude/settings.json claude/settings.json) \
+settings=$(jq '. * input' ~/.claude/settings.json ai/claude/settings.json) \
   && printf '%s\n' "$settings" > ~/.claude/settings.json
 
 echo "...Claude user settings baseline merged!"

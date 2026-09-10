@@ -8,19 +8,19 @@
 #   2. Grader - inspects the resulting workspace (git log/show, files) plus
 #      the executor's report, and judges each expectation with evidence.
 #
-# Usage: sh claude/evals/run-behavioral.sh <skill-name>
+# Usage: sh ai/evals/claude/run-behavioral.sh <skill-name>
 # Env:   EVAL_MODEL (default claude-sonnet-5)
 #
-# Results print to stdout as JSON and archive under claude/evals/results/
+# Results print to stdout as JSON and archive under ai/evals/claude/results/
 # (gitignored) with the model and date pinned.
 
 set -u
 
-repo_root=$(cd "$(dirname "$0")/../.." && pwd)
+repo_root=$(cd "$(dirname "$0")/../../.." && pwd)
 skill=${1:?usage: run-behavioral.sh <skill-name>}
 model=${EVAL_MODEL:-claude-sonnet-5}
 
-skill_dir=$repo_root/claude/plugin/skills/$skill
+skill_dir=$repo_root/ai/plugin/skills/$skill
 cases=$skill_dir/evals/evals.json
 [ -f "$cases" ] || { echo "No evals.json for '$skill'" >&2; exit 1; }
 
@@ -74,7 +74,7 @@ while [ "$i" -lt "$n" ]; do
 done
 wait
 
-results_dir=$repo_root/claude/evals/results
+results_dir=$repo_root/ai/evals/claude/results
 mkdir -p "$results_dir"
 outfile=$results_dir/behavioral-$skill-$(date +%Y%m%d-%H%M%S).json
 jq -s --arg skill "$skill" --arg model "$model" \

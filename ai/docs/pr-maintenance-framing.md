@@ -186,7 +186,7 @@ drafts are permanently out of scope.
 - **Placement test for new content (skill vs doc vs bundled reference).**
   First ask: who reads it, at which moment? Content the *agent needs at a
   moment of work* lives in skill-space; content a *maintainer needs when
-  redesigning* lives in `claude/docs/`. Within skill-space: it becomes its
+  redesigning* lives in `ai/docs/`. Within skill-space: it becomes its
   **own skill** iff it has a trigger moment of its own (a moment of work where
   it's needed and no parent skill is active), ideally with multiple consumers;
   otherwise it stays a **bundled reference** inside its single consumer.
@@ -538,3 +538,15 @@ what it would track.
 - **Do the label name (`maintained-by:agent`) and the 👍 convention generalize
   across repos and teams**, or do they need per-repo configuration the way the
   environment-specifics section does?
+
+## Organization update
+
+The collection now lives under `ai/`, which supersedes the earlier
+`claude/plugin/` location decision. Shared skills and framing live in
+`ai/plugin/skills/` and `ai/docs/`; evaluation runners live in `ai/evals/claude/`;
+personal Claude settings live in `ai/claude/`. The existing plugin manifest
+moves to `ai/plugin/.claude-plugin/`, and the marketplace points at `ai/plugin/`.
+This preserves the earlier distribution boundary: only the manifest and skills
+ship, while personal settings, framing, and eval runners remain outside the
+plugin. This organization-only change does not introduce a separate distribution
+build or change skill behavior.

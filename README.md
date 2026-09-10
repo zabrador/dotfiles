@@ -24,8 +24,8 @@ The installer:
 1. Installs Stow (via brew or apt) if needed
 2. Clones [Antigen](https://github.com/zsh-users/antigen) into `~/.antigen` if missing
 3. **Removes any existing home-directory files** that would collide with the Stow package, then links the package with Stow
-4. Links each Claude skill from [`claude/plugin/skills/`](claude/plugin/skills/) into `~/.claude/skills/` (**removing any same-named skill already there**; other local skills are left alone)
-5. Deep-merges [`claude/settings.json`](claude/settings.json) into `~/.claude/settings.json` via `jq` (installed if missing) — the repo file declares the Claude Code settings these dotfiles own; repo values win for declared keys while runtime-written state survives. Currently declared: `worktree.symlinkDirectories`, so Claude Code symlinks `.claude/settings.local.json` from a repo's main checkout into worktrees it creates (gitignored files otherwise don't exist there; the link only materializes when the repo has tracked `.claude/` content, since the parent directory must exist in the worktree checkout). `node_modules` is deliberately not linked — worktrees sharing the main checkout's dependency tree as writable state can corrupt it; opt individual repos in via their own project settings instead
+4. Links each Claude skill from [`ai/plugin/skills/`](ai/plugin/skills/) into `~/.claude/skills/` (**removing any same-named skill already there**; other local skills are left alone)
+5. Deep-merges [`ai/claude/settings.json`](ai/claude/settings.json) into `~/.claude/settings.json` via `jq` (installed if missing) — the repo file declares the Claude Code settings these dotfiles own; repo values win for declared keys while runtime-written state survives. Currently declared: `worktree.symlinkDirectories`, so Claude Code symlinks `.claude/settings.local.json` from a repo's main checkout into worktrees it creates (gitignored files otherwise don't exist there; the link only materializes when the repo has tracked `.claude/` content, since the parent directory must exist in the worktree checkout). `node_modules` is deliberately not linked — worktrees sharing the main checkout's dependency tree as writable state can corrupt it; opt individual repos in via their own project settings instead
 6. In Codespaces, strips signing-related Git config sections; otherwise, if `SSH_PRIVATE_KEY_ED25519` is set, writes that key into `~/.ssh`
 7. On Ona hosts, runs [`ona/setup.sh`](ona/setup.sh).
 8. Ensures Zsh is listed in `/etc/shells` and sets it as the login shell (`chsh`)
@@ -41,7 +41,7 @@ The `shell/` Stow package maps these files into `~/`:
 | `shell/.gitignore_global` | `~/.gitignore_global` |
 | `shell/.asdfrc` | `~/.asdfrc` |
 
-The `claude/plugin/skills` Stow package links each skill directory into `~/.claude/skills/` (per-skill symlinks, not one folded directory link), so Claude Code picks the skills up as personal skills on every machine while locally created skills can live alongside them. Because the links point into the repo, editing a skill through `~/.claude/skills/` edits the repo's working tree.
+The `ai/plugin/skills` Stow package links each skill directory into `~/.claude/skills/` (per-skill symlinks, not one folded directory link), so Claude Code picks the skills up as personal skills on every machine while locally created skills can live alongside them. Because the links point into the repo, editing a skill through `~/.claude/skills/` edits the repo's working tree.
 
 ### Assumptions
 
@@ -49,16 +49,30 @@ The `claude/plugin/skills` Stow package links each skill directory into `~/.clau
 - On Ona hosts, secrets from `/etc/profile.d/ona-secrets.sh` are sourced into Zsh
 - On Ona hosts, Ona's Claude integration writes root-owned files into `~vscode/.claude`; [`ona/fix-claude-remote-ownership.sh`](ona/fix-claude-remote-ownership.sh) watches the directory (via `inotifywait`, installed on demand) and hands ownership back to `vscode`
 
-## Claude
+## AI
 
-Personal Claude Code configuration.
+AI configuration and shared skills live under `ai/`:
+
+```text
+ai/
+  plugin/
+    skills/<skill>/    # Skill instructions and per-skill eval cases
+    .claude-plugin/    # Existing plugin manifest
+  evals/claude/        # Claude-specific evaluation runners and results
+  docs/               # Design rationale and decisions
+  claude/settings.json
+```
+
+The root `.claude-plugin/marketplace.json` points at `ai/plugin/`, so personal
+settings, framing docs, and eval runners stay outside the package. The current
+installation and evaluation tools still target Claude Code.
 
 ### Installing the skills
 
 Two channels:
 
 - **As dotfiles:** `install.sh` links each skill into `~/.claude/skills/` (see step 4 above), so the skills ride along wherever the dotfiles are installed, invoked by bare name.
-- **As plugin:** the repo doubles as a Claude Code plugin marketplace, with [`claude/plugin/`](claude/plugin/) as the plugin root:
+- **As plugin:** the repo doubles as a Claude Code plugin marketplace, with [`ai/plugin/`](ai/plugin/) as the plugin root:
 
   ```
   /plugin marketplace add zabrador/dotfiles
@@ -69,23 +83,23 @@ Two channels:
 
 ### Skills
 
-- [`planning-commits`](claude/plugin/skills/planning-commits/SKILL.md) — conceptual and decompositional; helps structure work as a sequence of atomic commits.
-- [`crafting-commits`](claude/plugin/skills/crafting-commits/SKILL.md) — the standard for what a good commit looks like: atomicity gut check, Conventional Commits format, and message honesty under amends and squashes.
-- [`replanning-branches`](claude/plugin/skills/replanning-branches/SKILL.md) — retroactive variant of `planning-commits`; re-shapes an already-committed branch into a clean atomic sequence on a fresh branch off the merge-base.
-- [`maintaining-prs`](claude/plugin/skills/maintaining-prs/SKILL.md) — PR maintenance; watches opt-in labeled PRs, triages CI failures, conflicts, and review feedback, and repairs whole stacks through a single cascade procedure.
-- [`making-git-changes`](claude/plugin/skills/making-git-changes/SKILL.md) — execution mechanics for all git state changes (commit, amend, rebase, force-push, conflict resolution); routes to the planners when commit shape changes and checks every created or modified commit against `crafting-commits`.
-- [`writing-comments`](claude/plugin/skills/writing-comments/SKILL.md) — the standard for TSDoc/docblocks and implementation comments: gates, interface vs. implementation volume, and durability. A standalone cluster; it does not govern README/ADR formats.
+- [`planning-commits`](ai/plugin/skills/planning-commits/SKILL.md) — conceptual and decompositional; helps structure work as a sequence of atomic commits.
+- [`crafting-commits`](ai/plugin/skills/crafting-commits/SKILL.md) — the standard for what a good commit looks like: atomicity gut check, Conventional Commits format, and message honesty under amends and squashes.
+- [`replanning-branches`](ai/plugin/skills/replanning-branches/SKILL.md) — retroactive variant of `planning-commits`; re-shapes an already-committed branch into a clean atomic sequence on a fresh branch off the merge-base.
+- [`maintaining-prs`](ai/plugin/skills/maintaining-prs/SKILL.md) — PR maintenance; watches opt-in labeled PRs, triages CI failures, conflicts, and review feedback, and repairs whole stacks through a single cascade procedure.
+- [`making-git-changes`](ai/plugin/skills/making-git-changes/SKILL.md) — execution mechanics for all git state changes (commit, amend, rebase, force-push, conflict resolution); routes to the planners when commit shape changes and checks every created or modified commit against `crafting-commits`.
+- [`writing-comments`](ai/plugin/skills/writing-comments/SKILL.md) — the standard for TSDoc/docblocks and implementation comments: gates, interface vs. implementation volume, and durability. A standalone cluster; it does not govern README/ADR formats.
 
 The skills coordinate across two git/PR clusters split by concern: atomic commits (`planning-commits` plans forward work and fix placement, `replanning-branches` takes over as the planner when reshaping a branch's already-committed history, `crafting-commits` holds the standard every commit must meet) and PR maintenance (`maintaining-prs` keeps open PRs green, consulting the atomic-commits skills for the shape of any repair). `making-git-changes` is the shared executor both clusters use for every git state change.
 
 ### Evals
 
-Each skill may carry evals under its own directory (`claude/plugin/skills/<skill>/evals/`): `evals.json` holds behavioral task cases in the official [skill-creator](https://code.claude.com/docs/en/skills#evaluate-and-iterate-on-a-skill) schema, and `trigger-evals.json` holds routing cases (`{query, should_trigger}`). Run everything that exists for a skill (or `all`) with:
+Each skill may carry evals under its own directory (`ai/plugin/skills/<skill>/evals/`): `evals.json` holds behavioral task cases in the official [skill-creator](https://code.claude.com/docs/en/skills#evaluate-and-iterate-on-a-skill) schema, and `trigger-evals.json` holds routing cases (`{query, should_trigger}`). Run everything that exists for a skill (or `all`) with:
 
 ```sh
-sh claude/evals/run-evals.sh <skill-name>|all [runs-per-trigger-query]
+sh ai/evals/claude/run-evals.sh <skill-name>|all [runs-per-trigger-query]
 ```
 
-or run one tier directly with `run-triggers.sh <skill> [runs]` / `run-behavioral.sh <skill>`. Trigger runs score a query as triggered when the Skill tool is consulted within the first few tool calls — deliberately looser than skill-creator's first-call-only contract, because the git skills mandate inspecting repository state before acting. Behavioral runs pair two headless sessions per case: an executor performs the task in a scratch workspace with the skill in hand, then a grader inspects the workspace and judges each expectation with cited evidence. Results are archived under `claude/evals/results/` (gitignored) with the model pinned; treat rates statistically and re-baseline deliberately on model updates.
+or run one tier directly with `run-triggers.sh <skill> [runs]` / `run-behavioral.sh <skill>`. Trigger runs score a query as triggered when the Skill tool is consulted within the first few tool calls — deliberately looser than skill-creator's first-call-only contract, because the git skills mandate inspecting repository state before acting. Behavioral runs pair two headless sessions per case: an executor performs the task in a scratch workspace with the skill in hand, then a grader inspects the workspace and judges each expectation with cited evidence. Results are archived under `ai/evals/claude/results/` (gitignored) with the model pinned; treat rates statistically and re-baseline deliberately on model updates.
 
-The primary workflow the commit skills support is plan-led with in-flight replanning: lay out the atomic commit sequence up front (typically in plan mode), execute against it, and revise the plan when execution reveals drift. This avoids producing tangled working trees that resist clean splitting. See [`claude/docs/atomic-commits-framing.md`](claude/docs/atomic-commits-framing.md) for the commit-shaping cluster's design rationale, source articles, and decisions log, [`claude/docs/pr-maintenance-framing.md`](claude/docs/pr-maintenance-framing.md) for the PR-maintenance cluster and the whole-system ownership map, and [`claude/docs/commenting-framing.md`](claude/docs/commenting-framing.md) for the commenting skill.
+The primary workflow the commit skills support is plan-led with in-flight replanning: lay out the atomic commit sequence up front (typically in plan mode), execute against it, and revise the plan when execution reveals drift. This avoids producing tangled working trees that resist clean splitting. See [`ai/docs/atomic-commits-framing.md`](ai/docs/atomic-commits-framing.md) for the commit-shaping cluster's design rationale, source articles, and decisions log, [`ai/docs/pr-maintenance-framing.md`](ai/docs/pr-maintenance-framing.md) for the PR-maintenance cluster and the whole-system ownership map, and [`ai/docs/commenting-framing.md`](ai/docs/commenting-framing.md) for the commenting skill.

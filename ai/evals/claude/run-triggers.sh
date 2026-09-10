@@ -1,7 +1,7 @@
 #!/bin/sh
 # Trigger evals: does a skill's description get consulted when it should?
 #
-# Cases live at claude/plugin/skills/<skill>/evals/trigger-evals.json as
+# Cases live at ai/plugin/skills/<skill>/evals/trigger-evals.json as
 # [{"query": "...", "should_trigger": true|false}, ...]. Each query runs in a
 # fresh git fixture with the skill's description injected the way
 # skill-creator's runner does it (a command file the classifier can see).
@@ -12,21 +12,21 @@
 # themselves mandate inspecting state (git status/diff) before acting, so a
 # leading Bash call is correct behavior, not a routing miss.
 #
-# Usage: sh claude/evals/run-triggers.sh <skill-name> [runs-per-query]
+# Usage: sh ai/evals/claude/run-triggers.sh <skill-name> [runs-per-query]
 # Env:   EVAL_MODEL (default claude-sonnet-5), MAX_CALLS (default 3)
 #
 # Results print to stdout as JSON and are archived under
-# claude/evals/results/ (gitignored) with the model and date pinned.
+# ai/evals/claude/results/ (gitignored) with the model and date pinned.
 
 set -u
 
-repo_root=$(cd "$(dirname "$0")/../.." && pwd)
+repo_root=$(cd "$(dirname "$0")/../../.." && pwd)
 skill=${1:?usage: run-triggers.sh <skill-name> [runs-per-query]}
 runs=${2:-2}
 model=${EVAL_MODEL:-claude-sonnet-5}
 max_calls=${MAX_CALLS:-3}
 
-skill_dir=$repo_root/claude/plugin/skills/$skill
+skill_dir=$repo_root/ai/plugin/skills/$skill
 cases=$skill_dir/evals/trigger-evals.json
 [ -f "$cases" ] || { echo "No trigger-evals.json for '$skill'" >&2; exit 1; }
 
@@ -109,7 +109,7 @@ while [ "$i" -lt "$total_queries" ]; do
   i=$((i + 1))
 done
 
-results_dir=$repo_root/claude/evals/results
+results_dir=$repo_root/ai/evals/claude/results
 mkdir -p "$results_dir"
 outfile=$results_dir/triggers-$skill-$(date +%Y%m%d-%H%M%S).json
 jq -s --arg skill "$skill" --arg model "$model" \
