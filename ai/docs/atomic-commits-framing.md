@@ -1,10 +1,10 @@
 # Atomic Commits Skill System: Conceptual Framing
 
-Design rationale and settled decisions for the skill system that helps Claude produce atomic git commits. The audience is someone reasoning about the design of these skills — future-you revising them, or an LLM helping with revisions. The SKILL.md files and source articles serve readers learning atomic commits.
+Design rationale and settled decisions for the skill system that helps coding agents produce atomic git commits. The audience is someone reasoning about the design of these skills — future-you revising them, or an LLM helping with revisions. The SKILL.md files and source articles serve readers learning atomic commits.
 
 ## What we're building
 
-Three coordinated Claude skills for Claude Code, split along two axes — phase (planning vs execution) and workflow mode (forward planning vs re-shaping committed history):
+Three coordinated coding-agent skills, split along two axes — phase (planning vs execution) and workflow mode (forward planning vs re-shaping committed history):
 
 - **planning-commits** — the forward-planning skill. Understands what makes a commit atomic; lays out the sequence of atomic commits a fresh change requires; revises the plan when execution reveals it was wrong (and creates one post-hoc when none existed).
 - **crafting-commits** — the standard skill. Defines what a good commit looks like: the atomicity gut check, Conventional Commits format, and the message-stays-true-under-mutation rule. Consulted at each commit point and after any operation that modifies a commit, regardless of which planner produced the plan; defers to `planning-commits` when a diff isn't atomic. (Execution mechanics live in the shared `making-git-changes` skill — see `pr-maintenance-framing.md`.)
@@ -38,7 +38,7 @@ The boundary between levels 1 and 2 is **shippability to users**. Feature planni
 - Fix disposition: placing a late change into an existing commit sequence (squash into the commit it corrects vs. a new commit) — added when `maintaining-prs` adopted planner-decided repair shape; see `pr-maintenance-framing.md`
 
 **Triggers:**
-- Plan mode is active — any change Claude is planning, trivial or not
+- Implementation planning is underway — any coding change the agent is planning, trivial or not
 - `crafting-commits` defers because the current diff isn't atomic
 - A late fix must be placed into an existing commit sequence (e.g. from `maintaining-prs`'s change procedure)
 - User explicitly asks to plan, split, reorganize, or clean up commits
@@ -54,10 +54,10 @@ The boundary between levels 1 and 2 is **shippability to users**. Feature planni
 - The handoff to `planning-commits` when the gut check fails
 
 **Triggers:**
-- User asks Claude to commit
-- Claude finishes a planned commit unit and is about to commit it
+- User asks the agent to commit
+- The agent finishes a planned commit unit and is about to commit it
 - An existing commit's content is about to change (amend, squash, conflict resolution)
-- User asks Claude to write, review, or fix a commit message
+- User asks the agent to write, review, or fix a commit message
 
 **Explicitly does not own:**
 - Git execution mechanics — staging, committing, rebasing, force-pushing (`making-git-changes`)
@@ -93,9 +93,9 @@ The boundary between levels 1 and 2 is **shippability to users**. Feature planni
 
 ## Workflow
 
-**Forward work — plan, then execute.** When Claude takes on a coding change, `planning-commits` runs first and lays out the sequence of atomic commits the change needs. Plan mode is the canonical trigger — whenever Claude enters plan mode, producing a commit plan is part of the work. Trivial changes collapse to single-commit plans at near-zero overhead, so there's no triviality threshold to apply. Claude then executes against the plan, invoking `making-git-changes` at each commit point, with `crafting-commits` as the standard each commit must pass.
+**Forward work — plan, then execute.** When an agent takes on a coding change, `planning-commits` runs first and lays out the sequence of atomic commits the change needs. Implementation planning is the trigger — producing a commit plan is part of that work, with or without a named plan mode. Trivial changes collapse to single-commit plans at near-zero overhead, so there's no triviality threshold to apply. The agent then executes against the plan, invoking `making-git-changes` at each commit point, with `crafting-commits` as the standard each commit must pass.
 
-**Replanning and recovery.** Plans drift on contact with code. Execution can reveal an unanticipated refactor, a hidden dependency, or a commit boundary the plan missed. The mechanism: `crafting-commits` runs a generic gut check against the current diff, independent of any plan. If the diff fails the check, `crafting-commits` defers to `planning-commits`, which updates the plan (or creates one from scratch, for cases where Claude went straight to committing without planning first). Work resumes against the revised plan.
+**Replanning and recovery.** Plans drift on contact with code. Execution can reveal an unanticipated refactor, a hidden dependency, or a commit boundary the plan missed. The mechanism: `crafting-commits` runs a generic gut check against the current diff, independent of any plan. If the diff fails the check, `crafting-commits` defers to `planning-commits`, which updates the plan (or creates one from scratch, for cases where the agent went straight to committing without planning first). Work resumes against the revised plan.
 
 **Re-shaping committed history.** When the work isn't fresh planning but reshaping a branch that already has committed history, `replanning-branches` is the planner instead of `planning-commits`. Default workflow: fresh branch off the merge-base, decompose `merge-base..HEAD` as a single tangled patch (ignoring the original commit log's groupings), produce the new commit sequence using `planning-commits`'s atomicity criteria and decomposition heuristics, and execute via `making-git-changes` against `crafting-commits`' standard — same executor, same gut check, same Conventional Commits format. In-place rebase plus force-push is a separate, riskier follow-up workflow that requires explicit confirmation about open review state.
 
@@ -103,7 +103,7 @@ The boundary between levels 1 and 2 is **shippability to users**. Feature planni
 
 - **Commit messages:** Conventional Commits (`type(scope): summary`)
 - **Mixed concerns:** Pragmatic stance — split when it clearly helps review, don't force splits for small mixed changes that would produce awkward single-line commits
-- **Target platform:** Claude Code (has git access)
+- **Target environment:** A coding agent with git access
 - **Skill slugs:** gerund-form, kebab-case (verb + -ing + object), per Anthropic's [skill best-practices guide](https://platform.claude.com/docs/en/agents-and-tools/agent-skills/best-practices#naming-conventions). Object is plural where countable, bare where uncountable. A skill's name describes its own scope, never the cluster it serves; cluster-level labels live in the framing doc title and filename only. Internal consistency (gerund form across the cluster) takes priority over operand parallelism (all skills sharing the same object).
 - **Doc filenames:** framing docs are named after the cluster they describe (`<cluster>-framing.md`), not after any single skill in it.
 - **Concept terms in docs:** kebab-case when a multi-word concept modifies another noun (compound-adjective use: `synthesized-intermediate-state pattern`, `importer-before-exporter ordering rule`), natural English when the concept is used substantively or in headings (the revert test, `the "and" heuristic`).
@@ -219,6 +219,12 @@ pushed — the last free moment for renames.
 
 ## Open questions
 
-- How explicit does `planning-commits`'s SKILL.md description need to be about plan mode, so that "fires in plan mode" actually happens reliably and isn't aspirational? Skill triggers are classifier-shaped — the description has to give Claude a sharp signal.
+- How reliably does `planning-commits` trigger during implementation planning across harnesses, including those without a named plan mode?
 - How does `planning-commits` surface itself when `crafting-commits` invokes it — explicit reference, natural invocation, or something else? To be decided during the design of `planning-commits`.
-- Should behavior differ between Claude Code and other surfaces? Current scope is Claude Code only.
+- How does skill routing and execution differ across harnesses? Neutral wording does not establish behavioral parity.
+
+## Wording portability update
+
+The current guidance uses implementation planning as the trigger, with or without
+an explicit plan mode. This supersedes the Claude-only wording in the historical
+decisions above; atomicity criteria and the plan-led workflow are unchanged.

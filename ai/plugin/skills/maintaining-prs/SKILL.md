@@ -278,7 +278,7 @@ Reading `mergeable`:
 - **After addressing feedback in code, reply to the thread** stating what was done
   and referencing the commit. **Self-identify as an agent** so it's clear the user
   isn't the one responding — open with a prefix like
-  `🤖 Claude, on <user>'s behalf:`.
+  `🤖 <agent name>, on <user>'s behalf:`, using your actual agent identity.
 - **The reply is the ledger.** Detection derives "already handled" from the
   presence of your self-identified reply — skip the reply and the item
   re-detects as pending on every sweep, forever. This covers the user's own
@@ -392,9 +392,9 @@ session:
   reconstruction uses as its merged-parent signal (a `baseRefName` matching
   the prefix with no open PR on it).
 
-Record what you learn in the target repo's own Claude config (its CLAUDE.md or
-a checked-in notes file), not in this skill — this file is repo-agnostic and
-travels with the user's dotfiles.
+Record what you learn in the target repo's existing agent instructions or
+checked-in notes, following that repo's file conventions, not in this skill —
+this file is repo-agnostic and travels with the user's dotfiles.
 
 ---
 

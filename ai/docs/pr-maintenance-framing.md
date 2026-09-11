@@ -210,7 +210,7 @@ drafts are permanently out of scope.
 - **Repo specifics live in the target repo, not the skill.** Skills carry only
   the *categories* of environment facts to learn (validation hook, worktree
   bootstrap, known flakes, human-gated checks, branch conventions); the facts
-  themselves are recorded in each target repo's own Claude config. These
+  themselves are recorded in each target repo's existing agent instructions or notes. These
   dotfiles are public — internal repo details don't belong here.
 
 ## Source material
@@ -550,3 +550,10 @@ This preserves the earlier distribution boundary: only the manifest and skills
 ship, while personal settings, framing, and eval runners remain outside the
 plugin. This organization-only change does not introduce a separate distribution
 build or change skill behavior.
+
+## Wording portability update
+
+Replies identify the actual agent, and environment notes follow the target repo's
+existing instruction-file conventions. Earlier Claude-specific wording is
+historical. Orchestration, authorization, and lifecycle rules remain unchanged;
+their portability requires a separate design pass.

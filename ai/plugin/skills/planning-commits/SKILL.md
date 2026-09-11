@@ -1,6 +1,6 @@
 ---
 name: planning-commits
-description: Plan the decomposition of coding work into atomic git commits. Use this skill whenever plan mode is active (trivial or not — a trivial change produces a single-commit plan), when mid-work changes have started spanning multiple concerns, when asked to split or reorganize commits, when a working tree is tangled and needs to be separated into discrete commits, when a late fix must be placed into an existing commit sequence (squash into the commit it corrects vs. a new commit — e.g. during PR maintenance), or when the crafting-commits gut check fails and a decomposition is needed. Also use whenever the user mentions atomic commits, commit decomposition, or asks how to structure a sequence of commits.
+description: Plan the decomposition of coding work into atomic git commits. Use this skill whenever planning the implementation of a coding change (trivial or not — a trivial change produces a single-commit plan), when mid-work changes have started spanning multiple concerns, when asked to split or reorganize commits, when a working tree is tangled and needs to be separated into discrete commits, when a late fix must be placed into an existing commit sequence (squash into the commit it corrects vs. a new commit — e.g. during PR maintenance), or when the crafting-commits gut check fails and a decomposition is needed. Also use whenever the user mentions atomic commits, commit decomposition, or asks how to structure a sequence of commits.
 ---
 
 This skill handles the planning and decomposition of coding work into atomic git commits. It operates at the implementation-planning altitude: given a task that is about to be worked on (or was just completed without commits being made along the way), it produces the sequence of atomic commits that will land the work cleanly.
@@ -57,7 +57,7 @@ The heuristic inverts because the units have different purposes. PRs need to shi
 
 ## Planning ahead, committing as you execute
 
-Produce the commit sequence up front — typically when plan mode is active — then execute against it, invoking `making-git-changes` at each planned commit point (each commit checked against `crafting-commits`). Trivial changes collapse to a single-commit plan; there's no triviality threshold.
+Produce the commit sequence up front — during implementation planning, with or without a named plan mode — then execute against it, invoking `making-git-changes` at each planned commit point (each commit checked against `crafting-commits`). Trivial changes collapse to a single-commit plan; there's no triviality threshold.
 
 Plans drift on contact with code. When the current diff no longer matches the next planned unit (an unanticipated refactor, a hidden dependency, a missed boundary), pause and revise the plan before continuing. Don't accumulate mixed concerns hoping to sort them later.
 
@@ -85,7 +85,7 @@ already committed. The planning question is disposition: does this change
   separately.
 
 This is plan revision in miniature, and no triviality threshold applies — as
-with plan mode, a trivial disposition costs nothing to decide explicitly.
+with implementation planning, a trivial disposition costs nothing to decide explicitly.
 Placing a single fix stays this skill's territory; `replanning-branches` takes
 over only when the task is reshaping a branch's whole sequence.
 
