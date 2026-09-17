@@ -69,7 +69,7 @@ installation and evaluation tools still target Claude Code.
 
 ### Installing the skills
 
-Two channels:
+Three channels:
 
 - **As dotfiles:** `install.sh` links each skill into `~/.claude/skills/` (see step 4 above), so the skills ride along wherever the dotfiles are installed, invoked by bare name.
 - **As plugin:** the repo doubles as a Claude Code plugin marketplace, with [`ai/plugin/`](ai/plugin/) as the plugin root:
@@ -80,6 +80,15 @@ Two channels:
   ```
 
   Plugin skills invoke as `zabrabot:<skill-name>`.
+
+- **With Pi:** install the skills directly from Git:
+
+  ```sh
+  pi install git:github.com/zabrador/dotfiles
+  pi update --extensions
+  ```
+
+  Pin an optional Git ref or tag in the install source when reproducibility matters.
 
 ### Skills
 
