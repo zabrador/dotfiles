@@ -24,11 +24,12 @@ The installer:
 1. Installs Stow (via brew or apt) if needed
 2. Clones [Antigen](https://github.com/zsh-users/antigen) into `~/.antigen` if missing
 3. **Removes any existing home-directory files** that would collide with the Stow package, then links the package with Stow
-4. Deep-merges [`ai/claude/settings.json`](ai/claude/settings.json) into `~/.claude/settings.json` via `jq` (installed if missing) — the repo file declares the Claude Code settings these dotfiles own; repo values win for declared keys while runtime-written state survives. Currently declared: `worktree.symlinkDirectories`, `extraKnownMarketplaces`, and `enabledPlugins`. `worktree.symlinkDirectories` makes Claude Code symlink `.claude/settings.local.json` from a repo's main checkout into worktrees it creates (gitignored files otherwise don't exist there; the link only materializes when the repo has tracked `.claude/` content, since the parent directory must exist in the worktree checkout). `node_modules` is deliberately not linked — worktrees sharing the main checkout's dependency tree as writable state can corrupt it; opt individual repos in via their own project settings instead
-5. Deep-merges [`ai/pi/settings.json`](ai/pi/settings.json) into `~/.pi/agent/settings.json` the same way. The only declared key is `packages`, the list of Pi packages these dotfiles own; because it is an array, the repo list replaces whatever is already there rather than unioning. Theme, model, and other Pi-written keys are left alone. Fetching the packages is left to `pi update --extensions` (or the next Pi session), not the installer
-6. In Codespaces, strips signing-related Git config sections; otherwise, if `SSH_PRIVATE_KEY_ED25519` is set, writes that key into `~/.ssh`
-7. On Ona hosts, runs [`ona/setup.sh`](ona/setup.sh).
-8. Ensures Zsh is listed in `/etc/shells` and sets it as the login shell (`chsh`)
+4. Deep-merges [`ai/claude/settings.json`](ai/claude/settings.json) into `~/.claude/settings.json` so Claude and Codex know which plugins to use
+5. Deep-merges [`ai/pi/settings.json`](ai/pi/settings.json) into `~/.pi/agent/settings.json` to set the Pi package list
+6. Updates each harness that's on `PATH` (`pi update --extensions`, `claude plugin marketplace update`, `codex plugin marketplace upgrade`)
+7. In Codespaces, strips signing-related Git config sections; otherwise, if `SSH_PRIVATE_KEY_ED25519` is set, writes that key into `~/.ssh`
+8. On Ona hosts, runs [`ona/setup.sh`](ona/setup.sh).
+9. Ensures Zsh is listed in `/etc/shells` and sets it as the login shell (`chsh`)
 
 ### What gets linked
 
@@ -84,7 +85,7 @@ Two channels — published packages, not home-directory Stow links. Codex reads 
 
   Claude Code plugin skills invoke as `zabrabot:<skill-name>`.
 
-- **With Pi:** `install.sh` writes the package list from [`ai/pi/settings.json`](ai/pi/settings.json) into `~/.pi/agent/settings.json`. Fetch the packages with `pi update --extensions`, or install only the skills without the rest of these dotfiles:
+- **With Pi:** `install.sh` writes the package list from [`ai/pi/settings.json`](ai/pi/settings.json) and runs `pi update --extensions`. To install only the skills, without the rest of these dotfiles:
 
   ```sh
   pi install git:github.com/zabrador/dotfiles

@@ -62,8 +62,7 @@ echo "Merging Claude user settings baseline..."
 mkdir -p ~/.claude
 [ -s ~/.claude/settings.json ] || echo '{}' > ~/.claude/settings.json
 
-# Buffer through a variable: redirecting jq onto its own input would truncate
-# it before jq reads it. The && means a jq failure never writes.
+# Buffer through a variable — redirecting jq onto its own input truncates it.
 settings=$(jq '. * input' ~/.claude/settings.json ai/claude/settings.json) \
   && printf '%s\n' "$settings" > ~/.claude/settings.json
 
@@ -75,12 +74,50 @@ echo "Merging Pi user settings baseline..."
 mkdir -p ~/.pi/agent
 [ -s ~/.pi/agent/settings.json ] || echo '{}' > ~/.pi/agent/settings.json
 
-# Same merge as Claude: repo values win for declared keys. `packages` is an
-# array, so jq `*` replaces the home list rather than unioning it.
 settings=$(jq '. * input' ~/.pi/agent/settings.json ai/pi/settings.json) \
   && printf '%s\n' "$settings" > ~/.pi/agent/settings.json
 
 echo "...Pi user settings baseline merged!"
+
+# --- Published agent packages -----------------------------------------------
+
+# asdf shims follow cwd; this script has already cd'd into the repo.
+run_from_home() {
+  (cd "$HOME" && "$@")
+}
+
+if type "pi" > /dev/null 2>&1; then
+  echo "Updating Pi packages..."
+  if ! pi update --extensions; then
+    echo "...Pi package update failed!" >&2
+    exit 1
+  fi
+  echo "...Pi packages updated!"
+else
+  echo "pi not on PATH; skipped package update. The packages list is in ~/.pi/agent/settings.json."
+fi
+
+if type "claude" > /dev/null 2>&1; then
+  echo "Updating Claude marketplaces..."
+  if ! run_from_home claude plugin marketplace update; then
+    echo "...Claude marketplace update failed!" >&2
+    exit 1
+  fi
+  echo "...Claude marketplaces updated!"
+else
+  echo "claude not on PATH; skipped marketplace update."
+fi
+
+if type "codex" > /dev/null 2>&1; then
+  echo "Updating Codex marketplaces..."
+  if ! run_from_home codex plugin marketplace upgrade; then
+    echo "...Codex marketplace upgrade failed!" >&2
+    exit 1
+  fi
+  echo "...Codex marketplaces updated!"
+else
+  echo "codex not on PATH; skipped marketplace update."
+fi
 
 # --- Environment-specific credentials / Codespaces --------------------------
 
