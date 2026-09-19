@@ -3,5 +3,16 @@
     "symlinkDirectories": [
       ".claude/settings.local.json"
     ]
+  },
+  "extraKnownMarketplaces": {
+    "zabrador": {
+      "source": {
+        "source": "github",
+        "repo": "zabrador/dotfiles"
+      }
+    }
+  },
+  "enabledPlugins": {
+    "zabrabot@zabrador": true
   }
 }
