@@ -56,20 +56,6 @@ done
 
 stow shell --target ~/
 
-# --- Claude skills -----------------------------------------------------------
-
-echo "Linking Claude skills..."
-mkdir -p ~/.claude/skills
-
-# Remove anything that would collide with the skills Stow package; skills not
-# in the package are left alone.
-for skill in ai/plugin/skills/*/; do
-  rm -rf ~/.claude/skills/"$(basename "$skill")"
-done
-
-stow skills --dir ai/plugin --target ~/.claude/skills
-echo "...Claude skills linked!"
-
 # --- Claude user settings -----------------------------------------------------
 
 echo "Merging Claude user settings baseline..."
