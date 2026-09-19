@@ -26,9 +26,10 @@ The installer:
 3. **Removes any existing home-directory files** that would collide with the Stow package, then links the package with Stow
 4. Links each shared skill from [`ai/plugin/skills/`](ai/plugin/skills/) into `~/.claude/skills/` (**removing any same-named skill already there**; other local skills are left alone)
 5. Deep-merges [`ai/claude/settings.json`](ai/claude/settings.json) into `~/.claude/settings.json` via `jq` (installed if missing) — the repo file declares the Claude Code settings these dotfiles own; repo values win for declared keys while runtime-written state survives. Currently declared: `worktree.symlinkDirectories`, so Claude Code symlinks `.claude/settings.local.json` from a repo's main checkout into worktrees it creates (gitignored files otherwise don't exist there; the link only materializes when the repo has tracked `.claude/` content, since the parent directory must exist in the worktree checkout). `node_modules` is deliberately not linked — worktrees sharing the main checkout's dependency tree as writable state can corrupt it; opt individual repos in via their own project settings instead
-6. In Codespaces, strips signing-related Git config sections; otherwise, if `SSH_PRIVATE_KEY_ED25519` is set, writes that key into `~/.ssh`
-7. On Ona hosts, runs [`ona/setup.sh`](ona/setup.sh).
-8. Ensures Zsh is listed in `/etc/shells` and sets it as the login shell (`chsh`)
+6. Deep-merges [`ai/pi/settings.json`](ai/pi/settings.json) into `~/.pi/agent/settings.json` the same way. The only declared key is `packages`, the list of Pi packages these dotfiles own; because it is an array, the repo list replaces whatever is already there rather than unioning. Theme, model, and other Pi-written keys are left alone. Fetching the packages is left to `pi update --extensions` (or the next Pi session), not the installer
+7. In Codespaces, strips signing-related Git config sections; otherwise, if `SSH_PRIVATE_KEY_ED25519` is set, writes that key into `~/.ssh`
+8. On Ona hosts, runs [`ona/setup.sh`](ona/setup.sh).
+9. Ensures Zsh is listed in `/etc/shells` and sets it as the login shell (`chsh`)
 
 ### What gets linked
 
@@ -61,6 +62,7 @@ ai/
   evals/claude/        # Claude-specific evaluation runners and results
   docs/               # Design rationale and decisions
   claude/settings.json
+  pi/settings.json     # Pi packages these dotfiles install
 ```
 
 The root `.claude-plugin/marketplace.json` points at `ai/plugin/`, so personal
@@ -81,14 +83,14 @@ Three channels:
 
   Plugin skills invoke as `zabrabot:<skill-name>`.
 
-- **With Pi:** install the skills directly from Git:
+- **With Pi:** `install.sh` writes the package list from [`ai/pi/settings.json`](ai/pi/settings.json) into `~/.pi/agent/settings.json`. Fetch the packages with `pi update --extensions`, or install only the skills without the rest of these dotfiles:
 
   ```sh
   pi install git:github.com/zabrador/dotfiles
   pi update --extensions
   ```
 
-  Pin an optional Git ref or tag in the install source when reproducibility matters.
+  Pin an optional Git ref or tag in the install source when reproducibility matters. Add further packages to the repo list rather than with ad-hoc `pi install` — the next install replaces the home `packages` array with the repo's.
 
 ### Skills
 

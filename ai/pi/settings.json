@@ -1,0 +1,8 @@
+{
+  "packages": [
+    "git:github.com/zabrador/dotfiles",
+    "npm:@narumitw/pi-plan-mode",
+    "npm:@tintinweb/pi-subagents",
+    "npm:pi-codex-web-search"
+  ]
+}

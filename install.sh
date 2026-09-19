@@ -82,6 +82,20 @@ settings=$(jq '. * input' ~/.claude/settings.json ai/claude/settings.json) \
   && printf '%s\n' "$settings" > ~/.claude/settings.json
 
 echo "...Claude user settings baseline merged!"
+
+# --- Pi user settings -------------------------------------------------------
+
+echo "Merging Pi user settings baseline..."
+mkdir -p ~/.pi/agent
+[ -s ~/.pi/agent/settings.json ] || echo '{}' > ~/.pi/agent/settings.json
+
+# Same merge as Claude: repo values win for declared keys. `packages` is an
+# array, so jq `*` replaces the home list rather than unioning it.
+settings=$(jq '. * input' ~/.pi/agent/settings.json ai/pi/settings.json) \
+  && printf '%s\n' "$settings" > ~/.pi/agent/settings.json
+
+echo "...Pi user settings baseline merged!"
+
 # --- Environment-specific credentials / Codespaces --------------------------
 
 if [ "$CODESPACES" = "true" ]; then
