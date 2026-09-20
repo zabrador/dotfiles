@@ -1,5 +1,10 @@
 echo "Installing dotfiles..."
 
+# Directory this script lives in, even if invoked via a relative path.
+script_dir=$(cd "$(dirname "$0")" && pwd)
+# Shared installer helpers.
+. "$script_dir/install/utils.sh"
+
 # Skip Homebrew's "ask before downloading" prompt. Unset after the brew
 # installs below so a sourced run does not leak this into the caller.
 export HOMEBREW_NO_ASK=1
@@ -64,8 +69,7 @@ fi
 
 # --- Stow home config -------------------------------------------------------
 
-# Move to the directory containing this install script
-cd "$(dirname "$0")"
+cd "$script_dir"
 
 echo "Removing existing configuration files..."
 for file in $(find shell -type f -exec basename {} \;); do
