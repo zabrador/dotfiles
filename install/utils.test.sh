@@ -58,6 +58,26 @@ merge_json "$empty" "$src"
 test_case "merge_json starts an empty dest as {}" \
   [ "$(jq -c . "$empty")" = '{"enabled":true}' ]
 
+test_case "tomlq is available for merge_toml tests" \
+  type tomlq
+
+toml_dest="$scratch/home/config.toml"
+toml_src="$scratch/repo/config.toml"
+printf '%s\n' 'model = "gpt-test"
+
+[plugins."gmail@openai-curated"]
+enabled = true' > "$toml_dest"
+printf '%s\n' '[plugins."zabrabot@zabrador"]
+enabled = true' > "$toml_src"
+merge_toml "$toml_dest" "$toml_src"
+test_case "merge_toml lets src keys win and keeps dest-only keys" \
+  [ "$(tomlq -c . "$toml_dest")" = '{"model":"gpt-test","plugins":{"gmail@openai-curated":{"enabled":true},"zabrabot@zabrador":{"enabled":true}}}' ]
+
+toml_empty="$scratch/home/empty.toml"
+merge_toml "$toml_empty" "$toml_src"
+test_case "merge_toml starts an empty dest as the src document" \
+  [ "$(tomlq -c . "$toml_empty")" = '{"plugins":{"zabrabot@zabrador":{"enabled":true}}}' ]
+
 test_case "run_if_present skips a missing command" \
   run_if_present "missing tool" definitely-not-a-dotfiles-command
 test_case "run_if_present succeeds when the command succeeds" \

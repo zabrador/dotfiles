@@ -60,21 +60,7 @@ merge_json ~/.pi/agent/settings.json ai/pi/settings.json
 echo "...Pi user settings baseline merged!"
 
 echo "Merging Codex user settings baseline..."
-if ! type "tomlq" > /dev/null 2>&1; then
-  echo "tomlq not on PATH; install python-yq (brew) or yq (apt)." >&2
-  exit 1
-fi
-mkdir -p ~/.codex
-if [ ! -s ~/.codex/config.toml ]; then
-  cp ai/codex/config.toml ~/.codex/config.toml
-else
-  if ! settings=$(tomlq -t '. * input' ~/.codex/config.toml ai/codex/config.toml); then
-    echo "...Codex user settings merge failed!" >&2
-    exit 1
-  fi
-  printf '%s\n' "$settings" > ~/.codex/config.toml
-fi
-
+merge_toml ~/.codex/config.toml ai/codex/config.toml
 echo "...Codex user settings baseline merged!"
 
 # --- Published agent packages -----------------------------------------------
