@@ -4,22 +4,41 @@ set -u
 here=$(cd "$(dirname "$0")" && pwd)
 . "$here/utils.sh"
 
-fail() {
-  echo "FAIL: $1" >&2
-  exit 1
+passed=0
+
+test_case() {
+  name="$1"
+  shift
+  if ( "$@" ) >/dev/null 2>&1; then
+    echo "ok    $name"
+    passed=$((passed + 1))
+  else
+    echo "FAIL  $name" >&2
+    exit 1
+  fi
+}
+
+test_case_fails() {
+  name="$1"
+  shift
+  if ( "$@" ) >/dev/null 2>&1; then
+    echo "FAIL  $name" >&2
+    exit 1
+  else
+    echo "ok    $name"
+    passed=$((passed + 1))
+  fi
 }
 
 pkg_manager=""
-if ! ensure_package sh; then
-  fail "ensure_package should succeed when the command exists"
-fi
-if ! ensure_package definitely-not-a-dotfiles-command; then
-  fail "ensure_package should no-op when pkg_manager is empty"
-fi
 
-if ! type jq > /dev/null 2>&1; then
-  fail "jq is required to test merge_json"
-fi
+test_case "ensure_package succeeds when the command exists" \
+  ensure_package sh
+test_case "ensure_package no-ops when pkg_manager is empty" \
+  ensure_package definitely-not-a-dotfiles-command
+
+test_case "jq is available for merge_json tests" \
+  type jq
 
 scratch=$(mktemp -d)
 trap 'rm -rf "$scratch"' EXIT
@@ -30,25 +49,20 @@ mkdir -p "$scratch/home" "$scratch/repo"
 printf '%s\n' '{"theme":"dark","packages":["old"]}' > "$dest"
 printf '%s\n' '{"packages":["new"]}' > "$src"
 merge_json "$dest" "$src"
-got=$(jq -c . "$dest")
-[ "$got" = '{"theme":"dark","packages":["new"]}' ] || fail "merge_json should let src keys win and keep dest-only keys (got $got)"
+test_case "merge_json lets src keys win and keeps dest-only keys" \
+  [ "$(jq -c . "$dest")" = '{"theme":"dark","packages":["new"]}' ]
 
 empty="$scratch/home/empty.json"
 printf '%s\n' '{"enabled":true}' > "$src"
 merge_json "$empty" "$src"
-got=$(jq -c . "$empty")
-[ "$got" = '{"enabled":true}' ] || fail "merge_json should start an empty dest as {} (got $got)"
+test_case "merge_json starts an empty dest as {}" \
+  [ "$(jq -c . "$empty")" = '{"enabled":true}' ]
 
-if ! run_if_present "missing tool" definitely-not-a-dotfiles-command; then
-  fail "run_if_present should skip a missing command"
-fi
+test_case "run_if_present skips a missing command" \
+  run_if_present "missing tool" definitely-not-a-dotfiles-command
+test_case "run_if_present succeeds when the command succeeds" \
+  run_if_present "true" true
+test_case_fails "run_if_present exits when the command fails" \
+  run_if_present "false" false
 
-if ! run_if_present "true" true; then
-  fail "run_if_present should succeed when the command succeeds"
-fi
-
-if (run_if_present "false" false); then
-  fail "run_if_present should exit when the command fails"
-fi
-
-echo "ok"
+echo "$passed passed"
