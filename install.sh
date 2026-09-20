@@ -1,5 +1,9 @@
 echo "Installing dotfiles..."
 
+# Skip Homebrew's "ask before downloading" prompt. Unset after the brew
+# installs below so a sourced run does not leak this into the caller.
+export HOMEBREW_NO_ASK=1
+
 # --- Package manager / system dependencies -----------------------------------
 
 if type "brew" > /dev/null; then
@@ -45,6 +49,8 @@ elif type "apt" > /dev/null; then
     echo "...tomlq installation complete!"
   fi
 fi
+
+unset HOMEBREW_NO_ASK
 
 # --- Antigen ----------------------------------------------------------------
 
