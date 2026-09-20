@@ -24,12 +24,13 @@ The installer:
 1. Installs Stow (via brew or apt) if needed
 2. Clones [Antigen](https://github.com/zsh-users/antigen) into `~/.antigen` if missing
 3. **Removes any existing home-directory files** that would collide with the Stow package, then links the package with Stow
-4. Deep-merges [`ai/claude/settings.json`](ai/claude/settings.json) into `~/.claude/settings.json` so Claude and Codex know which plugins to use
+4. Deep-merges [`ai/claude/settings.json`](ai/claude/settings.json) into `~/.claude/settings.json` so Claude knows which plugins to use
 5. Deep-merges [`ai/pi/settings.json`](ai/pi/settings.json) into `~/.pi/agent/settings.json` to set the Pi package list
-6. Updates each harness that's on `PATH` (`pi update --extensions`, `claude plugin marketplace update`, `codex plugin marketplace upgrade`)
-7. In Codespaces, strips signing-related Git config sections; otherwise, if `SSH_PRIVATE_KEY_ED25519` is set, writes that key into `~/.ssh`
-8. On Ona hosts, runs [`ona/setup.sh`](ona/setup.sh).
-9. Ensures Zsh is listed in `/etc/shells` and sets it as the login shell (`chsh`)
+6. Deep-merges [`ai/codex/config.toml`](ai/codex/config.toml) into `~/.codex/config.toml` so Codex knows which plugins to use
+7. Updates each harness that's on `PATH` (`pi update --extensions`, `claude plugin marketplace update`, `codex plugin marketplace upgrade`)
+8. In Codespaces, strips signing-related Git config sections; otherwise, if `SSH_PRIVATE_KEY_ED25519` is set, writes that key into `~/.ssh`
+9. On Ona hosts, runs [`ona/setup.sh`](ona/setup.sh).
+10. Ensures Zsh is listed in `/etc/shells` and sets it as the login shell (`chsh`)
 
 ### What gets linked
 
@@ -60,7 +61,8 @@ ai/
   evals/claude/        # Claude-specific evaluation runners and results
   docs/               # Design rationale and decisions
   claude/settings.json
-  pi/settings.json     # Pi packages these dotfiles install
+  pi/settings.json
+  codex/config.toml
 ```
 
 The root `.claude-plugin/marketplace.json` points at `ai/plugin/`, so personal

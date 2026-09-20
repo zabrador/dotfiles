@@ -17,6 +17,12 @@ if type "brew" > /dev/null; then
     brew install jq
     echo "...jq installation complete!"
   fi
+
+  if ! type "tomlq" > /dev/null; then
+    echo "Installing tomlq..."
+    brew install python-yq
+    echo "...tomlq installation complete!"
+  fi
 elif type "apt" > /dev/null; then
   echo "Using apt for installation..."
   sudo apt update
@@ -31,6 +37,12 @@ elif type "apt" > /dev/null; then
     echo "Installing jq..."
     sudo apt install jq
     echo "...jq installation complete!"
+  fi
+
+  if ! type "tomlq" > /dev/null; then
+    echo "Installing tomlq..."
+    sudo apt install yq
+    echo "...tomlq installation complete!"
   fi
 fi
 
@@ -78,6 +90,26 @@ settings=$(jq '. * input' ~/.pi/agent/settings.json ai/pi/settings.json) \
   && printf '%s\n' "$settings" > ~/.pi/agent/settings.json
 
 echo "...Pi user settings baseline merged!"
+
+# --- Codex user settings ----------------------------------------------------
+
+echo "Merging Codex user settings baseline..."
+if ! type "tomlq" > /dev/null 2>&1; then
+  echo "tomlq not on PATH; install python-yq (brew) or yq (apt)." >&2
+  exit 1
+fi
+mkdir -p ~/.codex
+if [ ! -s ~/.codex/config.toml ]; then
+  cp ai/codex/config.toml ~/.codex/config.toml
+else
+  if ! settings=$(tomlq -t '. * input' ~/.codex/config.toml ai/codex/config.toml); then
+    echo "...Codex user settings merge failed!" >&2
+    exit 1
+  fi
+  printf '%s\n' "$settings" > ~/.codex/config.toml
+fi
+
+echo "...Codex user settings baseline merged!"
 
 # --- Published agent packages -----------------------------------------------
 

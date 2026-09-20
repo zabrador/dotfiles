@@ -1,0 +1,6 @@
+[marketplaces.zabrador]
+source_type = "git"
+source = "https://github.com/zabrador/dotfiles.git"
+
+[plugins."zabrabot@zabrador"]
+enabled = true
