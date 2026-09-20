@@ -39,4 +39,16 @@ merge_json "$empty" "$src"
 got=$(jq -c . "$empty")
 [ "$got" = '{"enabled":true}' ] || fail "merge_json should start an empty dest as {} (got $got)"
 
+if ! run_if_present "missing tool" definitely-not-a-dotfiles-command; then
+  fail "run_if_present should skip a missing command"
+fi
+
+if ! run_if_present "true" true; then
+  fail "run_if_present should succeed when the command succeeds"
+fi
+
+if (run_if_present "false" false); then
+  fail "run_if_present should exit when the command fails"
+fi
+
 echo "ok"

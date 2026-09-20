@@ -33,3 +33,24 @@ merge_json() {
   fi
   printf '%s\n' "$settings" > "$dest"
 }
+
+# asdf shims follow cwd; install.sh has already cd'd into the repo.
+run_from_home() {
+  (cd "$HOME" && "$@")
+}
+
+run_if_present() {
+  label="$1"
+  shift
+  cmd="$1"
+  if ! type "$cmd" > /dev/null 2>&1; then
+    echo "$cmd not on PATH; skipped $label."
+    return 0
+  fi
+  echo "Running $label..."
+  if ! run_from_home "$@"; then
+    echo "...$label failed!" >&2
+    exit 1
+  fi
+  echo "...$label complete!"
+}
