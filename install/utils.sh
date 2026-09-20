@@ -20,3 +20,16 @@ ensure_package() {
   fi
   echo "...$command installation complete!"
 }
+
+merge_json() {
+  dest="$1"
+  src="$2"
+  mkdir -p "$(dirname "$dest")"
+  [ -s "$dest" ] || echo '{}' > "$dest"
+  # Capture first: `jq ... "$dest" > "$dest"` would empty the file before jq reads it.
+  if ! settings=$(jq '. * input' "$dest" "$src"); then
+    echo "...failed to merge $src into $dest!" >&2
+    exit 1
+  fi
+  printf '%s\n' "$settings" > "$dest"
+}

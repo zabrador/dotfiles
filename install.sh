@@ -49,30 +49,15 @@ done
 
 stow shell --target ~/
 
-# --- Claude user settings -----------------------------------------------------
+# --- Agent harness settings -------------------------------------------------
 
 echo "Merging Claude user settings baseline..."
-mkdir -p ~/.claude
-[ -s ~/.claude/settings.json ] || echo '{}' > ~/.claude/settings.json
-
-# Buffer through a variable — redirecting jq onto its own input truncates it.
-settings=$(jq '. * input' ~/.claude/settings.json ai/claude/settings.json) \
-  && printf '%s\n' "$settings" > ~/.claude/settings.json
-
+merge_json ~/.claude/settings.json ai/claude/settings.json
 echo "...Claude user settings baseline merged!"
 
-# --- Pi user settings -------------------------------------------------------
-
 echo "Merging Pi user settings baseline..."
-mkdir -p ~/.pi/agent
-[ -s ~/.pi/agent/settings.json ] || echo '{}' > ~/.pi/agent/settings.json
-
-settings=$(jq '. * input' ~/.pi/agent/settings.json ai/pi/settings.json) \
-  && printf '%s\n' "$settings" > ~/.pi/agent/settings.json
-
+merge_json ~/.pi/agent/settings.json ai/pi/settings.json
 echo "...Pi user settings baseline merged!"
-
-# --- Codex user settings ----------------------------------------------------
 
 echo "Merging Codex user settings baseline..."
 if ! type "tomlq" > /dev/null 2>&1; then
