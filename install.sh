@@ -5,55 +5,26 @@ script_dir=$(cd "$(dirname "$0")" && pwd)
 # Shared installer helpers.
 . "$script_dir/install/utils.sh"
 
+# --- Package manager / system dependencies -----------------------------------
+
 # Skip Homebrew's "ask before downloading" prompt. Unset after the brew
 # installs below so a sourced run does not leak this into the caller.
 export HOMEBREW_NO_ASK=1
 
-# --- Package manager / system dependencies -----------------------------------
-
+pkg_manager=""
 if type "brew" > /dev/null; then
+  pkg_manager=brew
   echo "Using brew for installation..."
   brew update
-
-  if ! type "stow" > /dev/null; then
-    echo "Installing stow..."
-    brew install stow
-    echo "...stow installation complete!"
-  fi
-
-  if ! type "jq" > /dev/null; then
-    echo "Installing jq..."
-    brew install jq
-    echo "...jq installation complete!"
-  fi
-
-  if ! type "tomlq" > /dev/null; then
-    echo "Installing tomlq..."
-    brew install python-yq
-    echo "...tomlq installation complete!"
-  fi
 elif type "apt" > /dev/null; then
+  pkg_manager=apt
   echo "Using apt for installation..."
   sudo apt update
-
-  if ! type "stow" > /dev/null; then
-    echo "Installing stow..."
-    sudo apt install stow
-    echo "...stow installation complete!"
-  fi
-
-  if ! type "jq" > /dev/null; then
-    echo "Installing jq..."
-    sudo apt install jq
-    echo "...jq installation complete!"
-  fi
-
-  if ! type "tomlq" > /dev/null; then
-    echo "Installing tomlq..."
-    sudo apt install yq
-    echo "...tomlq installation complete!"
-  fi
 fi
+
+ensure_package stow
+ensure_package jq
+ensure_package tomlq python-yq yq
 
 unset HOMEBREW_NO_ASK
 
