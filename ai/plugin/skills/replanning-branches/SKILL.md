@@ -5,7 +5,7 @@ description: Re-plan an existing committed branch into a clean atomic commit seq
 
 This skill handles re-shaping an existing committed branch into a clean sequence of atomic commits on a fresh branch off the merge-base. It operates one step removed from `planning-commits`: same atomicity criteria, same decomposition heuristics, but with workflow-specific patterns that only matter when the starting point is committed history rather than uncommitted work.
 
-The companion skills handle the parts this one delegates. `planning-commits` owns the conceptual definition of atomicity (the principle, the generative move, the verification criteria) and the general decomposition heuristics (refactor → feature → cleanup, vertical/horizontal slicing). `crafting-commits` owns the standard each commit must meet. `making-git-changes` owns execution mechanics — worktree isolation, safe force-pushing, conflict resolution; consult it before the rebase and cherry-pick work this skill plans. This skill provides the workflow framing and the patterns specific to re-decomposition.
+The companion skills handle the parts this one delegates. `planning-commits` owns the conceptual definition of atomicity (the principle, the generative move, the verification criteria) and the general decomposition heuristics (refactor → feature → cleanup, vertical/horizontal slicing). `crafting-commits` owns subjects and bodies. `making-git-changes` owns commit-readiness checks and execution mechanics — worktree isolation, safe force-pushing, conflict resolution; consult it before the rebase and cherry-pick work this skill plans. This skill provides the workflow framing and the patterns specific to re-decomposition.
 
 ## Default to a fresh branch off the merge-base
 
@@ -88,7 +88,7 @@ Be honest in the commit message. Use `refactor:` only when user-visible behavior
 
 - **The atomicity criteria themselves.** Owned by `planning-commits`: the principle (does one thing, "and" heuristic), the generative move ("work backward from the feature"), and the verification criteria (passes CI, deployable, no dead code, revert test).
 - **The general decomposition heuristics.** Refactor → feature → cleanup and vertical/horizontal slicing live in `planning-commits`.
-- **Single-commit execution.** Once the plan is in place, each commit is executed via `making-git-changes` against `crafting-commits`' standard — staging hunks (`git add -p`), writing the Conventional Commits message, running `git commit`.
+- **Single-commit execution.** Once the plan is in place, each commit is executed via `making-git-changes`, which checks readiness and uses `crafting-commits` for the message — staging hunks (`git add -p`), writing the Conventional Commits message, running `git commit`.
 - **Foundational vs layered as a design question.** When deciding whether a behavior is intrinsic to the abstraction or per-consumer, that's software design, not re-decomposition. `planning-commits` flags this escalation.
 - **In-place rebase plus force-push of shared branches.** Separate workflow, separate confirmations. Not the default this skill produces.
 - **Mutation-execution mechanics.** Worktree isolation, safe force-pushing, backup branches before destructive reorders, co-author trailers across rewritten history — all `making-git-changes`.

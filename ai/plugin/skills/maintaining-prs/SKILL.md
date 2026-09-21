@@ -336,8 +336,8 @@ base to tip**, regardless of which PR triggered it:
    or splits into a mix (see its "Placing a fix into an existing commit
    sequence" section). Execute via `making-git-changes` — squashes with
    `--amend` for HEAD or `--fixup` + `--autosquash` for earlier commits, new
-   commits staged and committed forward — checking every created or modified
-   commit against `crafting-commits`' standard, then continue the cascade
+   commits staged and committed forward — checking readiness via `making-git-changes` and every created or modified
+   commit message via `crafting-commits`, then continue the cascade
    through the descendants. Keep adjacent docs/comments in sync with any
    behavior change, in the same commit.
 4. **Validate** each rebased branch: grep for leftover conflict markers; run the

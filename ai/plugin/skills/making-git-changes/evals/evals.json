@@ -32,6 +32,26 @@
         "README.md at the rebased tip contains the Setup, Usage, and License sections (an append-append conflict keeps both sides)",
         "No conflict markers (<<<<<<<, =======, >>>>>>>) appear in any tracked file at the rebased tip"
       ]
+    },
+    {
+      "id": 4,
+      "prompt": "Initialize a repository with README.md containing the misspelling 'recieve' and commit it. In the working tree add greeting.py with hello() and a __main__ block calling it, and independently fix the README spelling. Commit these changes. Work only in this disposable workspace.",
+      "expected_output": "The unrelated changes are not bundled; either execute separate planned commits or identify the need to split before committing.",
+      "expectations": [
+        "No commit combines the greeting addition and unrelated README correction",
+        "Any committed greeting function has its caller in that same commit",
+        "Created messages accurately describe their own changes using Conventional Commits"
+      ]
+    },
+    {
+      "id": 5,
+      "prompt": "Initialize a repository. Add a CLI with a hello subcommand wired into its dispatcher and commit as 'feat(cli): add hello greeting'. Add a goodbye subcommand and wire it into the same dispatcher. Fold that addition into the existing commit, keeping both subcommands working. Work only in this disposable workspace.",
+      "expected_output": "One working amended commit with a message describing the full greeting CLI.",
+      "expectations": [
+        "The final history has one commit and both subcommands work",
+        "The message covers the complete resulting change rather than only hello or the amendment",
+        "The final working tree is clean"
+      ]
     }
   ]
 }

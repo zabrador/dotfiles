@@ -3,31 +3,32 @@
   "evals": [
     {
       "id": 1,
-      "prompt": "Initialize a git repository and make an initial commit adding README.md with a one-paragraph project description that contains the misspelling 'recieve'. Then, in the working tree, do both of the following: create auth.py implementing a login(username, password) function, and correct the misspelling in README.md. Now commit my changes.",
-      "expected_output": "The unrelated changes are not bundled: either two atomic commits (the feature and the typo fix) are created, or the multi-concern diff is explicitly flagged before committing.",
+      "prompt": "Draft a message for this proposed commit in result.md. The diff adds a login command with a working CLI entrypoint and also fixes an unrelated spelling mistake in the project introduction. The author proposes 'feat: improve the project'. I only want a message and any useful feedback, not changes to code or history.",
+      "expected_output": "Describe both concerns honestly and flag their unrelated scope without doing decomposition or refusing to draft.",
       "expectations": [
-        "The auth.py addition and the README typo fix do not land in the same commit",
-        "Each created commit message follows Conventional Commits and accurately describes only its own change",
-        "The transcript or commit structure acknowledges that the working tree contained multiple unrelated concerns"
+        "The proposed message does not hide either concern behind a generic improvement claim",
+        "Author-facing feedback identifies the unrelated changes and suggests separate planning",
+        "Produces a draft without creating commits or attempting history restructuring"
       ]
     },
     {
       "id": 2,
-      "prompt": "Initialize a git repository. Commit greeting.py containing only a hello() function, using the commit message 'feat: add hello greeting'. Then add a goodbye() function to greeting.py in the working tree. This change belongs in the previous commit - fold it in.",
-      "expected_output": "The change is amended into the prior commit and the message is updated to describe the commit as it now is (both functions), not just the hello greeting.",
+      "prompt": "Improve this commit message in result.md. Original subject: 'feat(cli): add hello greeting'. The commit was amended and now adds a CLI with hello and goodbye subcommands, both wired into the dispatcher. This is the complete resulting diff. Draft only.",
+      "expected_output": "Describe the resulting greeting CLI rather than only the original hello addition or the goodbye amendment.",
       "expectations": [
-        "The final history contains exactly one commit, and greeting.py at HEAD contains both hello() and goodbye()",
-        "The final commit message no longer describes only the hello greeting; it accurately covers the module as it now is"
+        "The subject accurately covers the complete resulting CLI change",
+        "Uses an imperative Conventional Commits subject",
+        "Does not execute an amend or describe only the most recent delta"
       ]
     },
     {
       "id": 3,
-      "prompt": "Initialize a git repository with an initial commit adding app.py containing an add(a, b) function. In the working tree, append a subtract(a, b) function to app.py. Commit it.",
-      "expected_output": "A clean, atomic single-purpose change commits without friction: one new commit with an accurate Conventional Commits message, no refusal or unnecessary splitting.",
+      "prompt": "Write a commit message in result.md for a consistent rename from tokenOffset to byteOffset; it clarifies the unit and changes no behavior. Draft only.",
+      "expected_output": "A specific Conventional Commits subject, with no unnecessary body or execution workflow.",
       "expectations": [
-        "Exactly one new commit was created on top of the initial commit",
-        "The new commit's message follows Conventional Commits and accurately describes adding the subtract function",
-        "The change was not refused, questioned as non-atomic, or split into multiple commits"
+        "Uses a concrete imperative subject accurately describing the rename",
+        "Avoids a multi-paragraph body or unrelated caveats for this small change",
+        "Does not require tests or create commits just to draft the message"
       ]
     },
     {
@@ -42,9 +43,10 @@
     },
     {
       "id": 5,
-      "prompt": "Draft a commit subject and body in result.md from these verified facts: execution is pushed; execution evidence and a charged attempt are then checkpointed; only then does PR publication start. Publication evidence is saved after publication succeeds. Both checkpointing and publication can fail. Existing body: 'Checkpoint execution before publication so failed publication is recoverable.' Draft only.",
+      "prompt": "Draft a commit subject and body in result.md from this before/after pseudocode. Before: result = execute(); push(result); pr = publish(result); saveExecution(result, chargedAttempt); savePublication(pr). After: result = execute(); push(result); saveExecution(result, chargedAttempt); pr = publish(result); savePublication(pr). Each function can throw; later calls do not run after a throw. saveExecution stores completed work and its charged attempt on the task. publish creates or edits its PR. The current body is 'Checkpoint execution before publication so failed publication is recoverable.' Draft only; no git mutations.",
       "expected_output": "Explain the concrete ordering and condition recovery on a successful checkpoint.",
       "expectations": [
+        "Explains the old publication-failure consequence before relying on checkpoint terminology, so a reader can understand why changing the order helps",
         "Explains push, checkpoint, publication ordering and recovery from publication failure",
         "Does not guarantee durability when the checkpoint fails",
         "Distinguishes execution evidence from publication evidence",
@@ -64,7 +66,7 @@
     },
     {
       "id": 7,
-      "prompt": "Review and improve this commit message only if it needs improvement; write result.md. Subject: 'refactor(harness): use action defaults for preflight'. Body: 'Create startup harnesses through the same action factories used at runtime so readiness checks use the models each action will actually select.' The supplied diff implements exactly that and nothing else. Draft only.",
+      "prompt": "Improve this commit message; write result.md. Subject: 'refactor(harness): use action defaults for preflight'. Body: 'Create startup harnesses through the same action factories used at runtime so readiness checks use the models each action will actually select.' The supplied diff implements exactly that and nothing else. Draft only.",
       "expected_output": "Retain the already-clear causal explanation.",
       "expectations": [
         "Retains the mechanism and reason with comparable brevity",

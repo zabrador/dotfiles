@@ -4,9 +4,9 @@
     {
       "id": 1,
       "prompt": "Draft a replacement PR description in result.md, using only these supplied facts. Existing Changes: 'Put authentication, plugin, and model-access checks on the provider instance configured for that action.' The diff moves checks onto the instance and startup calls the same action factories as runtime. Defaults remain unchanged. Existing Testing: 'At abc123 the author reported 811/813 tests passing; the two subprocess failures were reproduced on the base. Error formatting was checked manually. Full deployment remains untested.' Keep Changes and Testing sections. Do not publish anything.",
-      "expected_output": "Preserve the useful opening, add the causal link, and retain all material validation limits with attribution.",
+      "expected_output": "Explain why startup and runtime should use the same configuration, retaining material validation limits and attribution.",
       "expectations": [
-        "Connects shared startup/runtime factories to checking the models actually selected",
+        "Explains the risk of checks and runtime choices diverging before relying on instance/factory ownership language; does not invent a demonstrated production failure",
         "Retains the 811/813 result, two failures reproduced on base, revision and author attribution",
         "Keeps the manual check distinct from automated coverage and retains untested deployment",
         "Does not invent a fresh run or perform external writes"
@@ -82,6 +82,28 @@
         "Separately explains how mixed commit boundaries make review harder and suggests replanning the committed branch",
         "Does not perform decomposition, git mutations, or code changes, or withhold the requested draft",
         "Does not invent test execution results"
+      ]
+    },
+    {
+      "id": 9,
+      "prompt": "Improve this PR description for engineers unfamiliar with the export service. Write result.md; no publication. Existing Changes: 'Worker-owned admissibility suppresses leased work on revoked grants; ledger retention enables later admission. Claims still count against cap. Uses canRun on refreshed grant state.' Existing questions were 'Why stop an export?', 'What happens to its progress?', and 'When can it continue?'. Source notes: a grant is a customer's permission to export data. The ledger stores each export's progress. Previously queued exports kept running after permission was revoked. Now each iteration refreshes permission; a revoked job gets no work, its stored progress remains, and restoring permission lets it continue on a subsequent iteration. A paused job continues occupying one of the limited concurrent-export slots. This PR is one cohesive change. Tests assert revoke/restore behavior but execution results are unavailable. Keep Changes and Testing.",
+      "expected_output": "Explain the permission-revocation scenario, pause/progress/resume behavior, and capacity consequence in accessible connected prose, retaining useful questions.",
+      "expectations": [
+        "A reader can explain the previous permission problem, new behavior, and benefit without decoding admissibility, leases, ledger, or admission",
+        "Retains the useful question structure or improves it with an equally clear sequence; does not compress all consequences into an ownership bullet",
+        "Introduces the progress store by purpose if naming it, and makes continuation conditional on restored permission",
+        "Keeps the capacity consequence and unknown test execution accurate without treating this cohesive change as requiring replanning"
+      ]
+    },
+    {
+      "id": 10,
+      "prompt": "Rewrite the Testing section in result.md. Evidence records for the same suite at revision abc123: Monday's sandbox run had 2 subprocess failures; Tuesday's unrestricted rerun passed all 852 tests plus typecheck and lint, resolving those failures. The author supplied both records. abc123 is the full stack tip, not this PR's head. Unit tests stub the remote API. A live Actions campaign has never been run. Commands and full logs are available in the repository's checked-in docs/validation/abc123.md. Yesterday's prose update did not rerun tests. Draft only.",
+      "expected_output": "Lead with current reported confidence and visible remaining limits, with detailed supporting records linked and superseded execution history omitted or secondary.",
+      "expectations": [
+        "Starts with the successful author-reported result rather than the chronology of attempts",
+        "Keeps whole-stack scope and untested live campaign visible outside collapsed evidence",
+        "Links the supplied validation record without fabricating another source and distinguishes stubbed tests from live coverage",
+        "Does not present resolved failures or the prose-edit session as current limitations; does not claim direct observation"
       ]
     }
   ]

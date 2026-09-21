@@ -7,10 +7,10 @@ Design rationale and settled decisions for the skill system that helps coding ag
 Three coordinated coding-agent skills, split along two axes — phase (planning vs execution) and workflow mode (forward planning vs re-shaping committed history):
 
 - **planning-commits** — the forward-planning skill. Understands what makes a commit atomic; lays out the sequence of atomic commits a fresh change requires; revises the plan when execution reveals it was wrong (and creates one post-hoc when none existed).
-- **crafting-commits** — the standard skill. Defines what a good commit looks like: the atomicity gut check, Conventional Commits format, and the message-stays-true-under-mutation rule. Consulted at each commit point and after any operation that modifies a commit, regardless of which planner produced the plan; defers to `planning-commits` when a diff isn't atomic. (Execution mechanics live in the shared `making-git-changes` skill — see `pr-maintenance-framing.md`.)
+- **crafting-commits** — the writing skill. Defines clear, accurate commit subjects and bodies, including after amendments. It can flag structural concerns and suggest planning without performing decomposition. Commit readiness and execution live in `making-git-changes` (see `pr-maintenance-framing.md`).
 - **replanning-branches** — the re-shaping skill. Replaces `planning-commits` as the planner when the work is reshaping a branch's already-committed history rather than planning fresh work. Adds patterns specific to that workflow (decomposing from the diff rather than the existing commit log, synthesizing intermediate code states, importer-before-exporter ordering); delegates atomicity reasoning back to `planning-commits`.
 
-`planning-commits` and `replanning-branches` own the planning thinking; `crafting-commits` is the universal standard, applied by the shared executor `making-git-changes`.
+`planning-commits` and `replanning-branches` own the planning thinking; `crafting-commits` owns message writing; `making-git-changes` checks readiness and executes.
 
 ## Three altitudes of planning
 
@@ -18,7 +18,7 @@ When thinking about where work lives, three levels:
 
 1. **Feature planning** — given a roadmap item, what's the sequence of shippable slices? Produces tickets/PRs. *Out of scope for all three skills.*
 2. **Implementation planning** — given a single ticket, what's the sequence of commits that gets there? `planning-commits`'s territory for forward work; `replanning-branches`'s territory when reshaping a branch's already-committed history.
-3. **Commit execution** — given the current diff, judge it and commit. `crafting-commits` owns the judging and `making-git-changes` the mechanics, regardless of which planner produced the plan.
+3. **Commit execution** — given the current diff, judge it and commit. `making-git-changes` owns readiness and mechanics, consulting `crafting-commits` for the message, regardless of which planner produced the plan.
 
 The boundary between levels 1 and 2 is **shippability to users**. Feature planning produces units that can ship independently and provide value on their own; implementation planning produces units that advance the codebase correctly but don't necessarily ship alone (e.g., a refactor commit enabling a later feature commit).
 
@@ -39,41 +39,27 @@ The boundary between levels 1 and 2 is **shippability to users**. Feature planni
 
 **Triggers:**
 - Implementation planning is underway — any coding change the agent is planning, trivial or not
-- `crafting-commits` defers because the current diff isn't atomic
+- `making-git-changes` finds the diff is not ready to commit
 - A late fix must be placed into an existing commit sequence (e.g. from `maintaining-prs`'s change procedure)
 - User explicitly asks to plan, split, reorganize, or clean up commits
 
 ## crafting-commits
 
-**Scope:** Judging any commit at the moment it is created or its content changes,
-and drafting, reviewing, or improving its subject and body.
+**Scope:** Drafting, reviewing, or improving commit subjects and bodies.
 
 **Owns:**
-- A compact atomicity gut check (not full analysis), independent of any plan
-- Conventional Commits message format
-- Durable message reasoning: concrete changes, causal explanations, and
-  checkable invariants grounded in the individual commit's tree
-- Proportional detail and preservation of validation limits in message edits
-- The message-stays-true-under-mutation rule: after an amend, squash, or conflict resolution, the commit is re-judged as if being created now
-- The handoff to `planning-commits` when the gut check fails
+- Reader understanding: explain the problem, changed behavior, and reason
+- Conventional Commits format and proportional detail
+- Accuracy at the commit's tree, including after an amend or squash
+- Flagging structural obstacles without silently restructuring a writing task
 
-**Triggers:**
-- User asks the agent to commit
-- The agent finishes a planned commit unit and is about to commit it
-- An existing commit's content is about to change (amend, squash, conflict resolution)
-- User asks the agent to write, review, or fix a commit message
+**Triggers:** A message is needed or its accuracy needs checking after content
+changes. The executor consults it at commit points; users can ask for prose alone.
 
-**Explicitly does not own:**
-- Git execution mechanics — staging, committing, rebasing, force-pushing (`making-git-changes`)
-- Full decomposition of tangled trees (defers to `planning-commits`)
-- Deep atomicity reasoning (uses a compact checklist instead)
-- Refactor/feature/cleanup decomposition
-- Awareness of the plan — the gut check is plan-independent by design
-- PR titles and descriptions (`crafting-prs`)
-
-Drafting a message does not itself authorize committing or rewriting history.
-The creation gates do not require a fresh test run to suggest prose; messages
-must accurately distinguish test coverage, observed runs, and reported evidence.
+**Does not own:** CI, deployability, dead-code or revert checks; git operations;
+commit decomposition. `making-git-changes` checks readiness against the
+planner's criteria. `planning-commits` owns cohesion and decomposition;
+`crafting-prs` owns PR titles and descriptions. A draft needs no new test run.
 
 ## replanning-branches
 
@@ -95,18 +81,18 @@ must accurately distinguish test coverage, observed runs, and reported evidence.
 **Explicitly does not own:**
 - The atomicity criteria themselves (`planning-commits`)
 - General decomposition heuristics — refactor → feature → cleanup, the generative move, vertical/horizontal slicing (`planning-commits`)
-- Single-commit execution (`making-git-changes` against `crafting-commits`' standard)
+- Single-commit execution (`making-git-changes` with messages from `crafting-commits`)
 - Foundational vs layered as a design question — escalation territory inside `planning-commits`'s "When the commit boundary is really a design question" section
 - In-place rebase plus force-push of shared branches — separate workflow, separate confirmations, not the default this skill produces
 - Mutation-execution mechanics — worktree isolation, backup branches, co-author trailers across rewritten history (`making-git-changes`; migrated when the PR-maintenance cluster introduced the shared executor — see `pr-maintenance-framing.md`)
 
 ## Workflow
 
-**Forward work — plan, then execute.** When an agent takes on a coding change, `planning-commits` runs first and lays out the sequence of atomic commits the change needs. Implementation planning is the trigger — producing a commit plan is part of that work, with or without a named plan mode. Trivial changes collapse to single-commit plans at near-zero overhead, so there's no triviality threshold to apply. The agent then executes against the plan, invoking `making-git-changes` at each commit point, with `crafting-commits` as the standard each commit must pass.
+**Forward work — plan, then execute.** When an agent takes on a coding change, `planning-commits` runs first and lays out the sequence of atomic commits the change needs. Implementation planning is the trigger — producing a commit plan is part of that work, with or without a named plan mode. Trivial changes collapse to single-commit plans at near-zero overhead, so there's no triviality threshold to apply. The agent then executes against the plan, invoking `making-git-changes` at each commit point, checking readiness there and messages with `crafting-commits`.
 
-**Replanning and recovery.** Plans drift on contact with code. Execution can reveal an unanticipated refactor, a hidden dependency, or a commit boundary the plan missed. The mechanism: `crafting-commits` runs a generic gut check against the current diff, independent of any plan. If the diff fails the check, `crafting-commits` defers to `planning-commits`, which updates the plan (or creates one from scratch, for cases where the agent went straight to committing without planning first). Work resumes against the revised plan.
+**Replanning and recovery.** Plans drift on contact with code. Execution can reveal an unanticipated refactor, a hidden dependency, or a commit boundary the plan missed. The mechanism: `making-git-changes` runs a readiness check against the current diff, independent of any plan. If the diff fails the cohesion check, `making-git-changes` defers to `planning-commits`, which updates the plan (or creates one from scratch, for cases where the agent went straight to committing without planning first). Work resumes against the revised plan.
 
-**Re-shaping committed history.** When the work isn't fresh planning but reshaping a branch that already has committed history, `replanning-branches` is the planner instead of `planning-commits`. Default workflow: fresh branch off the merge-base, decompose `merge-base..HEAD` as a single tangled patch (ignoring the original commit log's groupings), produce the new commit sequence using `planning-commits`'s atomicity criteria and decomposition heuristics, and execute via `making-git-changes` against `crafting-commits`' standard — same executor, same gut check, same Conventional Commits format. In-place rebase plus force-push is a separate, riskier follow-up workflow that requires explicit confirmation about open review state.
+**Re-shaping committed history.** When the work isn't fresh planning but reshaping a branch that already has committed history, `replanning-branches` is the planner instead of `planning-commits`. Default workflow: fresh branch off the merge-base, decompose `merge-base..HEAD` as a single tangled patch (ignoring the original commit log's groupings), produce the new commit sequence using `planning-commits`'s atomicity criteria and decomposition heuristics, and execute via `making-git-changes` with messages from `crafting-commits` — same executor, same gut check, same Conventional Commits format. In-place rebase plus force-push is a separate, riskier follow-up workflow that requires explicit confirmation about open review state.
 
 ## Conventions
 
@@ -155,6 +141,10 @@ The `replanning-branches` skill draws on these articles for atomicity reasoning 
 ---
 
 ## Appendix: Decisions log
+
+Historical decisions below record earlier ownership. The current boundary
+supersedes references to a crafting-commits gut check: message writing stays
+there; readiness checks and execution are now owned by making-git-changes.
 
 Decisions captured with reasoning so future sessions don't re-litigate them. Ordered roughly by when they were settled.
 

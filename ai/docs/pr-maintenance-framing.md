@@ -33,10 +33,10 @@ Six git/PR skills, two clusters, one shared executor:
 | --- | --- | --- |
 | `planning-commits` | atomic commits | plans forward work and fix placement; owns atomicity doctrine |
 | `replanning-branches` | atomic commits | plans the re-decomposition of committed history |
-| `crafting-commits` | atomic commits | defines atomicity and durable message standards at each commit's tree |
+| `crafting-commits` | atomic commits | writes clear, accurate subjects and bodies at each commit's tree |
 | `crafting-prs` | PR work | defines titles and descriptions that explain decisions and preserve evidence |
 | `maintaining-prs` | PR work | watches, triages, and repairs open PRs |
-| `making-git-changes` | shared executor | executes all git state changes safely, for any caller |
+| `making-git-changes` | shared executor | checks commit readiness and executes git state changes safely |
 
 The clusters split by **concern, not by time**: the atomic-commits cluster owns
 the shape and explanation of commit history; the PR-work cluster owns review
@@ -46,11 +46,12 @@ not a pipeline — whenever a repair touches code, the commit-shape question
 re-arises and the atomic-commits skills govern it. The phase split (planning vs
 execution) applies across both clusters — `making-git-changes` is the single
 executor for every git state change, and `crafting-commits` is the
-plan-independent standard it consults whenever a commit is created or modified.
+writing standard it consults whenever a commit message is needed or rechecked.
 
 Delegation edges:
 
-- `crafting-commits` → `planning-commits` (diff isn't atomic; needs a plan)
+- `crafting-commits` may suggest `planning-commits` when writing reveals mixed
+  concerns; it does not start restructuring a writing-only request
 - `replanning-branches` → `planning-commits` (atomicity criteria),
   → `making-git-changes` (execution)
 - `maintaining-prs` → `planning-commits` (shape of any repair: squash vs new
@@ -67,9 +68,20 @@ PR writing also applies independently of maintenance. A direct request to
 draft or update a named PR's prose is scoped to that artifact; it neither
 requires the maintenance label nor enrolls the PR in watching. Commit bodies
 explain individual units durably; PR descriptions help assess the whole change.
-Both standards favor concrete behavior, causal reasoning, and checkable
-invariants over file inventories or a fixed template. Known test failures and
-untested paths survive editorial rewrites unless newer evidence supersedes them.
+Both standards assume an average engineer who may struggle with the subject.
+They introduce the problem and behavior before implementation detail, explain
+necessary terms and causal links, and preserve explanation/review order when
+possible. Optimize reading effort rather than word count: connected sentences
+can be clearer than a compact inventory. Current validation limits remain
+visible; supporting records belong in evidence, and superseded attempts need
+not remain in the narrative.
+
+This calibration follows first use on the Ruly pause/flag-removal/Actions stack:
+technically fuller descriptions had become harder to understand. Useful sources
+are [Google's audience guidance](https://developers.google.com/tech-writing/one/audience),
+[Gopen and Swan on reader expectations](https://www.cs.tufts.edu/comp/150FP/archive/george-gopen/sci.html),
+and [Google's review navigation](https://google.github.io/eng-practices/review/reviewer/navigate.html).
+These inform the writing judgment; they do not prescribe a fixed PR template.
 
 The case grid behind the routing — content × sequence — determines which
 planner, if any, leads a git change:
@@ -93,7 +105,8 @@ Routing, by ask — the utterance and the skill that should lead:
 - "Fix my PR", "why is CI red", "watch my PRs", "address the review comments"
   → `maintaining-prs`: triage precedes any mutation, and mutation happens only
   through its change procedure.
-- "Commit this" → `making-git-changes`, judged against `crafting-commits`.
+- "Commit this" → `making-git-changes` for readiness and execution,
+  `crafting-commits` for its message.
 
 ## maintaining-prs
 
@@ -131,13 +144,15 @@ skills.
 ## making-git-changes
 
 **Scope:** How to execute any git state change safely, for any caller —
-forward commits and mutations alike. Mechanics, not sequence design, not
-judgment.
+forward commits and mutations alike. It applies readiness criteria and executes
+the operations; sequence design belongs to the planners.
 
 **Owns:**
+- Commit-readiness checks: applicable validation, deployability, live callers,
+  and the revert test, including the combined result after a squash
 - The route-before-execute rules: a shape decision must exist when commit
   shape changes (already made in plan-led work; consult a planner when
-  absent), `crafting-commits` check after any commit is created or modified,
+  absent), readiness check and `crafting-commits` message check when content changes,
   doctrine only for pure replay
 - Forward-commit mechanics (staging, `git add -p`, `git commit`)
 - History discipline (rebase-not-merge; squash fixes into the commit they fix)
@@ -152,7 +167,7 @@ judgment.
 **Explicitly does not own:**
 - Atomicity and commit-sequence design (`planning-commits`,
   `replanning-branches`)
-- The standard a commit must meet (`crafting-commits`)
+- Commit subjects and bodies (`crafting-commits`)
 - When a change is *authorized* — callers decide that (`maintaining-prs`'s
   triggers, the user's ad-hoc request); this skill only governs execution
 
@@ -247,6 +262,10 @@ failure modes, not literature.
 ---
 
 ## Appendix: Decisions log
+
+Historical references to crafting-commits as a whole-commit standard are
+superseded by the current split: it owns messages; making-git-changes owns
+readiness checks and execution; planning-commits owns decomposition.
 
 Decisions captured with reasoning so future sessions don't re-litigate them.
 

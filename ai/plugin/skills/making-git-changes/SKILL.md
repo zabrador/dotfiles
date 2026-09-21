@@ -10,8 +10,8 @@ description: >
   merges, or when another skill (maintaining-prs, replanning-branches)
   reaches its execution step. This skill governs how operations are executed
   safely — what the commit sequence should be belongs to planning-commits and
-  replanning-branches, and the standard a commit must meet belongs to
-  crafting-commits.
+  replanning-branches. This skill checks commit readiness; crafting-commits
+  owns subjects and bodies.
 ---
 
 General-purpose rules for changing git state safely and keeping branches
@@ -29,23 +29,37 @@ Three questions determine what accompanies any operation here:
    it is about to be made implicitly — stop and consult the planner:
    `planning-commits` for fresh work or placing a late fix (squash vs. new
    commit), `replanning-branches` for re-decomposing committed history.
-2. **Did the operation create or modify a commit?** Check the result against
-   `crafting-commits` — the gut check, the message format, and the
-   message-stays-true rule. This applies to squashes and amends exactly as it
-   does to fresh commits.
-3. **Pure replay** — rebasing onto a newer base, resolving conflicts while
-   preserving intent, re-triggering CI? No planner, no re-judging beyond
-   `crafting-commits`' honesty backstop; the safety doctrine below is what
-   matters.
+2. **Will the operation create or change a commit's contents?** Apply the
+   readiness check below to the whole resulting commit, including amends,
+   squashes, and conflict resolutions. Use `crafting-commits` to write or check
+   the message against that result.
+3. **Pure replay** — a clean rebase preserving the changes does not require a
+   new decomposition plan. Resolve conflicts under the safety doctrine below;
+   if resolution changes the commit's meaning, recheck readiness and its message.
+
+## Commit readiness
+
+Before committing, verify the resulting diff against `planning-commits`' criteria:
+
+- Relevant tests, lint, and type checks pass; run applicable repository checks
+  and report actual results rather than assuming CI is green.
+- It is deployable, with no half-wired runtime state.
+- New functions have callers and new configuration is used in the same commit.
+- Reverting it would remove the described change without unrelated work.
+
+Judge the complete commit, not only a fixup delta. If a check fails, address
+validation failures or consult `planning-commits` for a decomposition before
+committing. If the planner is unavailable, explain the blocking concern; do
+not silently bundle unrelated changes. These are execution gates, not
+prerequisites for drafting a message.
 
 ## Forward commits
 
 1. Run `git status` and `git diff` (plus `git diff --staged` if anything is
    already staged) to see what's about to be committed.
-2. Check the diff against `crafting-commits`' standard. If it fails, stop and
-   defer as that skill directs.
+2. Apply the readiness check above; stop and address any failure.
 3. If it passes: stage the intended changes with `git add <files>` or
-   `git add -p` for hunk-level selection, craft the message per the standard,
+   `git add -p` for hunk-level selection, craft the message with `crafting-commits`,
    and run `git commit`.
 
 ## History discipline
@@ -59,8 +73,8 @@ Three questions determine what accompanies any operation here:
   - Fix belongs to an earlier commit → `git commit --fixup=<sha>`, then
     `git rebase -i --autosquash <base>`
   - Never leave standalone "fix", "oops", or "address review" commits.
-  - After the squash lands, re-check the target commit against
-    `crafting-commits` — its message must still describe it.
+  - After the squash lands, re-check readiness of the combined commit and
+    its message via `crafting-commits`.
 
 ## Safe force-pushing
 

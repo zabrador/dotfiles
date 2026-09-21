@@ -1,98 +1,107 @@
-# Explain decisions, not a template
+# Build understanding before adding detail
 
-These examples adapt the supplied Ruly PR-description comparisons. The source
-descriptions were often already useful. The improvements below clarify causal
-reasoning and boundaries; they are not instructions to reproduce headings or
-length. Verify every claim against the target PR before using similar prose.
+These are adapted excerpts, not complete descriptions or templates. Verify facts
+against the target change. The pause example draws on the supplied revisions of
+[Ruly #193281](https://github.com/VantaInc/obsidian/pull/193281); the testing example
+also reflects [#193338](https://github.com/VantaInc/obsidian/pull/193338). Live PRs
+can change; these examples illustrate editorial choices, not current code claims.
 
-Source comparisons: [provider ownership (#192608)](https://github.com/VantaInc/obsidian/pull/192608),
-[preflight causality (#192047)](https://github.com/VantaInc/obsidian/pull/192047),
-and [logging contracts (#193314)](https://github.com/VantaInc/obsidian/pull/193314).
-The supplied handoff preserves historical before text and validation limits;
-live GitHub descriptions may change and do not establish those earlier facts.
+## Keep the scenario and useful questions
 
-## Turn capabilities into ownership boundaries
+Dense version:
 
-Before:
+> The campaign decides eligibility. `isActive` suppresses all worker turns,
+> including verification. Paused PRs consume capacity; board state is retained.
 
-> Add a second provider harness, keep its concerns in that class, and extract
-> usage before report validation. Read the decoder, agent, and tests.
+More understandable:
 
-After:
-
-> Add a second provider behind the existing harness contract. Its implementation
-> owns command construction, response decoding, validation, and temporary-file
-> cleanup, so actions and the shared lifecycle need no provider-specific branch.
+> A flag-removal task can become inappropriate if the flag starts rolling out
+> again. Deleting the task would lose its progress; pausing lets Ruly keep that
+> work until the flag qualifies for removal again.
 >
-> Extract available usage before report validation so invalid reports can still
-> contribute diagnostics. Missing counts remain unknown. The implementation is
-> available for direct injection; action defaults remain on the existing provider.
-
-The reviewer can now check where responsibility ends and whether callers have
-actually switched. A file list locates code but does not explain that decision.
-
-## Add a missing causal link to good prose
-
-Before:
-
-> Put authentication, plugin, and model-access checks on the provider instance
-> configured for that action.
-
-After:
-
-> Put authentication, plugin, and model-access checks on the provider instance.
-> Startup uses the same action factories as runtime, so preflight checks the
-> defaults the actions will actually use.
-
-The improvement is the reason the mechanism matters. If the original already
-contains that causal link, leave it alone. It does not need question headings
-or an architecture essay.
-
-## Separate contracts in a review route
-
-Before:
-
-> Standardize logging and add invocation diagnostics. Propagate the logger,
-> add output formats, report completion and duration, and collect token usage.
-
-After:
-
-> The first commit establishes one operational-log format and passes the
-> command's logger through callers; command results stay on stdout. Review that
-> output contract before the second commit's invocation accounting.
+> **What does pausing do?** Ruly stops working on the task, including checking
+> whether it is complete. The task stays on the board, Ruly's saved task list,
+> with its progress intact.
 >
-> Each invocation attempts one completion log after cleanup, including failure
-> paths. Accounting belongs to the call, so overlapping calls cannot leak usage.
-> Missing counts remain unknown, and logger failure preserves the original
-> invocation result.
+> **Who decides when to pause?** Each campaign—the configuration for a kind of
+> work, such as flag removal—checks whether its tasks are still eligible. That
+> rule belongs to the campaign because different kinds of work have different
+> reasons to stop.
+>
+> **What happens to an existing PR?** Ruly attempts to add `DO NOT MERGE` so the
+> paused work is visibly blocked. The open PR still counts toward the limit on
+> simultaneous PRs. Ruly does not remove the label automatically on resume,
+> because a person or another tool may also need it to remain blocked.
 
-The sequence earns its place because it separates two contracts. Use a simpler
-paragraph when the actual diff has no useful commit progression.
+The extra sentences introduce terms and connect behavior to reasons. The
+questions divide the reader's work. They are worth preserving when already
+present. This excerpt does not replace the rest of the PR: consequential label
+failure behavior and the separate ownership change still need appropriate space.
 
-## Preserve inconvenient evidence
+## Explain the problem before naming its owner
 
-Existing evidence:
+Before:
 
-> At revision abc123, the author reported 811/813 tests passing. The two
-> subprocess failures were also reproduced on the base. Top-level error
-> formatting was checked manually. No full deployment run was performed.
+> Put provider preflight on action-owned harness instances.
 
-An edit may shorten this to:
+After, assuming the diff supports this problem:
 
-> Author-reported at abc123: 811/813 tests passed; both subprocess failures
-> also reproduced on the base. Error formatting was checked manually; full
-> deployment remains untested.
+> Startup checks could validate one model while an action later selected
+> another. Build the startup checks from the same configured instances used to
+> run actions, so startup checks the credentials and model access those actions
+> actually need.
 
-Replacing it with "Tests cover logging and error handling" loses evidence.
-"All tests pass" invents evidence. If only the handoff records the old run,
-attribute it to that source; do not claim to have inspected logs or rerun tests.
+The reader can understand the mismatch before learning an abstraction's name.
+Do not invent that mismatch if it was not possible in the old code. For a
+preventive refactor, explain the duplication and future drift it prevents
+instead of claiming an existing bug.
 
-## Scale down to the change
+## Keep explanation and review in one sequence
 
-For a rename whose purpose is to clarify units:
+For a configuration move followed by new title support:
 
-> Rename `offset` to `byteOffset` to make its unit explicit; values and parsing
-> behavior are unchanged.
+> Put a campaign's PR title and body settings together. Review the two commits
+> in order: the first moves the existing body settings under `pr`, preserving
+> headings and rendering. The second adds title settings beside them, so
+> publication can resolve the title and body from the same declaration.
 
-That can be the entire Changes section. Preserve required repository sections
-with brief, truthful entries; do not manufacture three review questions.
+The overview explains the destination; the following sentences explain the
+same sequence the reviewer will inspect. Do not force this structure onto a
+single rename or a history whose ordering makes the explanation harder.
+
+## Preserve current confidence, not an execution diary
+
+Suppose the author reported a failed sandbox run followed by a successful
+unrestricted run of the same suite at the same revision. The earlier failures
+were resolved; a full Actions campaign remains untested.
+
+Before:
+
+> Observed in the preceding implementation session at abc123: 852 tests across
+> 53 files passed, plus typecheck and lint. Initial sandbox subprocess failures
+> were cleared by the successful unrestricted run. No tests were rerun for this
+> prose-only update. A full Actions campaign remains unverified.
+
+After:
+
+> The author reported 852 tests passing, plus typecheck and lint, at stack tip
+> `abc123`. This was a whole-stack run, not a separate run at this PR's head.
+> A full Actions campaign remains untested.
+
+The confidence and its limits remain visible. The resolved attempt and editorial
+session add no remaining limitation. Put useful commands and detailed run
+records in linked or collapsed evidence; do not invent links or provenance.
+
+If the latest result were instead 811/813, preserve that result and its two
+failures. A successful subset does not supersede a failed full suite.
+
+## Remove irrelevant caveats; retain necessary qualifications
+
+If a consistent rename changes `offset` to `byteOffset` to clarify its unit:
+
+> Rename `offset` to `byteOffset` to make its unit explicit; parsing is unchanged.
+
+Do not append that the PR does not add caching, change providers, or fix unrelated
+bugs. Those exclusions do not explain the rename. In contrast, an injectable
+provider addition needs to distinguish availability from default selection if
+readers might otherwise infer that actions have switched providers.
