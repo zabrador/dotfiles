@@ -29,6 +29,47 @@
         "The new commit's message follows Conventional Commits and accurately describes adding the subtract function",
         "The change was not refused, questioned as non-atomic, or split into multiple commits"
       ]
+    },
+    {
+      "id": 4,
+      "prompt": "Draft a commit subject and body in result.md, without creating or amending commits. This commit moves existing campaign body declarations beneath pr. Headings, templates, generated values, and render order remain identical. A later commit adds title configuration. Existing body: 'Move the body fields under pr without changing rendering.' Use only these supplied facts.",
+      "expected_output": "A concise ownership refactor explanation names the preserved rendering properties.",
+      "expectations": [
+        "Uses an imperative Conventional Commits subject describing the structural move",
+        "Names relevant preserved rendering properties without claiming title support",
+        "Does not create or amend commits or invent test results"
+      ]
+    },
+    {
+      "id": 5,
+      "prompt": "Draft a commit subject and body in result.md from these verified facts: execution is pushed; execution evidence and a charged attempt are then checkpointed; only then does PR publication start. Publication evidence is saved after publication succeeds. Both checkpointing and publication can fail. Existing body: 'Checkpoint execution before publication so failed publication is recoverable.' Draft only.",
+      "expected_output": "Explain the concrete ordering and condition recovery on a successful checkpoint.",
+      "expectations": [
+        "Explains push, checkpoint, publication ordering and recovery from publication failure",
+        "Does not guarantee durability when the checkpoint fails",
+        "Distinguishes execution evidence from publication evidence",
+        "Uses a specific Conventional Commits subject and does not mutate history"
+      ]
+    },
+    {
+      "id": 6,
+      "prompt": "Review this proposed commit message against the supplied facts and write result.md. Subject: 'feat(harness): switch actions to the second provider'. Body: 'Use the new provider for every action. Tests pass.' Actual commit: adds and exports an injectable provider implementation; action factories still use the original provider. Tests assert decoding and cleanup with mocks, but no run result is known. The child commit switches defaults. Draft a corrected message only.",
+      "expected_output": "Correct both scope and validation claims at this commit's tree.",
+      "expectations": [
+        "Subject and body describe implementing a provider without claiming adoption",
+        "Removes the unsupported tests-pass claim without inventing replacement results",
+        "Keeps the message understandable without the child or PR discussion",
+        "Does not rewrite history"
+      ]
+    },
+    {
+      "id": 7,
+      "prompt": "Review and improve this commit message only if it needs improvement; write result.md. Subject: 'refactor(harness): use action defaults for preflight'. Body: 'Create startup harnesses through the same action factories used at runtime so readiness checks use the models each action will actually select.' The supplied diff implements exactly that and nothing else. Draft only.",
+      "expected_output": "Retain the already-clear causal explanation.",
+      "expectations": [
+        "Retains the mechanism and reason with comparable brevity",
+        "Does not add a file inventory, mandatory headings, unsupported tests, or unrelated scope exclusions"
+      ]
     }
   ]
 }

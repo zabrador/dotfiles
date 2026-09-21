@@ -31,6 +31,13 @@ and repo-agnostic. This file covers only what is specific to maintaining the
 user's PRs; repo-specific facts belong in each target repo's own config (see
 "Repo/environment specifics" below).
 
+For PR titles and descriptions, consult `crafting-prs`; commit messages remain
+with `crafting-commits`. An explicitly requested editorial update to named PRs
+is scoped to that request, even without the maintenance label. It does not
+enroll those PRs in maintenance, start watchers, or authorize code or history
+changes. The label scope and orchestration below govern the maintenance
+workflow, not a standalone request to draft or update prose.
+
 ## Scope
 
 **Which PRs.** Scope is **opt-in via label**. A PR is in scope iff both hold:
@@ -350,7 +357,8 @@ base to tip**, regardless of which PR triggered it:
      - lease pinned y/n
      - approvals dismissed y/n (per PR; → REVIEW_REQUIRED)
      - threads replied to
-     - PR description still accurate y/n (update it if that's within your remit)
+     - PR title and description still accurate y/n (check against `crafting-prs`,
+       preserving validation limits; update if that's within your remit)
      - current CI state
      - judgment calls: any non-mechanical conflict resolution or discretionary
        choice, stated so the user can review it ("none" if none)

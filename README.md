@@ -99,13 +99,14 @@ Two channels — published packages, not home-directory Stow links. Codex reads 
 ### Skills
 
 - [`planning-commits`](ai/plugin/skills/planning-commits/SKILL.md) — conceptual and decompositional; helps structure work as a sequence of atomic commits.
-- [`crafting-commits`](ai/plugin/skills/crafting-commits/SKILL.md) — the standard for what a good commit looks like: atomicity gut check, Conventional Commits format, and message honesty under amends and squashes.
+- [`crafting-commits`](ai/plugin/skills/crafting-commits/SKILL.md) — commit atomicity and writing standards: concrete subjects, durable bodies, checkable invariants, and message honesty at each commit's tree.
+- [`crafting-prs`](ai/plugin/skills/crafting-prs/SKILL.md) — PR titles and descriptions that reduce reviewer effort: explain decisions, ownership, and behavior while preserving validation evidence and each stack layer's scope.
 - [`replanning-branches`](ai/plugin/skills/replanning-branches/SKILL.md) — retroactive variant of `planning-commits`; re-shapes an already-committed branch into a clean atomic sequence on a fresh branch off the merge-base.
 - [`maintaining-prs`](ai/plugin/skills/maintaining-prs/SKILL.md) — PR maintenance; watches opt-in labeled PRs, triages CI failures, conflicts, and review feedback, and repairs whole stacks through a single cascade procedure.
 - [`making-git-changes`](ai/plugin/skills/making-git-changes/SKILL.md) — execution mechanics for all git state changes (commit, amend, rebase, force-push, conflict resolution); routes to the planners when commit shape changes and checks every created or modified commit against `crafting-commits`.
 - [`writing-comments`](ai/plugin/skills/writing-comments/SKILL.md) — the standard for TSDoc/docblocks and implementation comments: gates, interface vs. implementation volume, and durability. A standalone cluster; it does not govern README/ADR formats.
 
-The skills coordinate across two git/PR clusters split by concern: atomic commits (`planning-commits` plans forward work and fix placement, `replanning-branches` takes over as the planner when reshaping a branch's already-committed history, `crafting-commits` holds the standard every commit must meet) and PR maintenance (`maintaining-prs` keeps open PRs green, consulting the atomic-commits skills for the shape of any repair). `making-git-changes` is the shared executor both clusters use for every git state change.
+The skills coordinate across two git/PR clusters split by concern: atomic commits (`planning-commits` plans forward work and fix placement, `replanning-branches` takes over as the planner when reshaping a branch's already-committed history, `crafting-commits` holds the standard every commit must meet) and PR work (`crafting-prs` defines the writing standard; `maintaining-prs` keeps open PRs green, consulting that standard for prose and the atomic-commits skills for the shape of any repair). `making-git-changes` is the shared executor both clusters use for every git state change. Drafting or updating prose does not itself start maintenance or authorize history rewriting.
 
 ### Evals
 

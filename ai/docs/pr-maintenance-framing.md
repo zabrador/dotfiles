@@ -27,19 +27,20 @@ Two skills:
 
 ## The whole-system map
 
-Five skills, two clusters, one shared executor:
+Six git/PR skills, two clusters, one shared executor:
 
 | Skill | Cluster | Role |
 | --- | --- | --- |
 | `planning-commits` | atomic commits | plans forward work and fix placement; owns atomicity doctrine |
 | `replanning-branches` | atomic commits | plans the re-decomposition of committed history |
-| `crafting-commits` | atomic commits | defines the standard every commit must meet (gut check, format, honesty) |
-| `maintaining-prs` | PR maintenance | watches, triages, and repairs open PRs |
+| `crafting-commits` | atomic commits | defines atomicity and durable message standards at each commit's tree |
+| `crafting-prs` | PR work | defines titles and descriptions that explain decisions and preserve evidence |
+| `maintaining-prs` | PR work | watches, triages, and repairs open PRs |
 | `making-git-changes` | shared executor | executes all git state changes safely, for any caller |
 
 The clusters split by **concern, not by time**: the atomic-commits cluster owns
-the shape of commit history (what the commits should be); the PR-maintenance
-cluster owns PR health (CI, conflicts, review flow, delegation boundaries). A
+the shape and explanation of commit history; the PR-work cluster owns review
+context and PR health (CI, conflicts, review flow, delegation boundaries). A
 PR-maintenance session always *starts* from a published branch, but the split is
 not a pipeline — whenever a repair touches code, the commit-shape question
 re-arises and the atomic-commits skills govern it. The phase split (planning vs
@@ -53,11 +54,22 @@ Delegation edges:
 - `replanning-branches` → `planning-commits` (atomicity criteria),
   → `making-git-changes` (execution)
 - `maintaining-prs` → `planning-commits` (shape of any repair: squash vs new
-  commits), → `making-git-changes` (execution)
+  commits), → `making-git-changes` (execution), → `crafting-prs` (title and
+  description accuracy after changes)
+- `crafting-prs` → `maintaining-prs` (applicable scope rules before GitHub
+  writes; direct editorial requests do not start the maintenance workflow)
 - `making-git-changes` → `crafting-commits` (after any operation that creates
   or modifies a commit); also fires directly on ad-hoc asks ("commit this",
   "rebase this onto main", "squash these fixups", "resolve this conflict")
   with no parent skill active
+
+PR writing also applies independently of maintenance. A direct request to
+draft or update a named PR's prose is scoped to that artifact; it neither
+requires the maintenance label nor enrolls the PR in watching. Commit bodies
+explain individual units durably; PR descriptions help assess the whole change.
+Both standards favor concrete behavior, causal reasoning, and checkable
+invariants over file inventories or a fixed template. Known test failures and
+untested paths survive editorial rewrites unless newer evidence supersedes them.
 
 The case grid behind the routing — content × sequence — determines which
 planner, if any, leads a git change:

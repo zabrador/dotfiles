@@ -1,6 +1,6 @@
 ---
 name: crafting-commits
-description: The standard for what a good git commit looks like — a quick atomicity gut check, Conventional Commits message format, and the honesty rule that a message must describe the commit as it now is. Use this skill whenever a commit is about to be created or an existing commit's content is about to change (committing, amending, squashing, resolving conflicts in a rebase), and whenever asked to write, review, or fix a commit message. This skill judges commits; executing git operations belongs to the making-git-changes skill, and decomposition of tangled changes belongs to planning-commits.
+description: Judge commit atomicity and write subjects and bodies that make each change understandable on its own. Use when creating or modifying a commit (including amends, squashes, and conflict resolution), or when asked to draft, review, or improve commit messages. Covers Conventional Commits, durable explanations, and accuracy at each commit's tree. Git mechanics belong to making-git-changes, decomposition to planning-commits, and PR titles and descriptions to crafting-prs.
 ---
 
 This skill defines the standard a git commit must meet — whether the commit is
@@ -10,6 +10,12 @@ skill owns the git mechanics and consults this standard after any operation
 that creates or modifies a commit. For deep conceptual reasoning about atomic
 commits, or decomposition of tangled changes into a sequence of commits, defer
 to `planning-commits`.
+
+For message-only work, inspect the relevant diff and existing message, then
+draft or edit the requested prose. The creation gates below do not require a
+new test run or history rewrite merely to suggest a message. Flag unrelated
+changes honestly; better wording cannot make a mixed commit atomic. A request
+for a draft does not authorize committing it or changing commit boundaries.
 
 ## The gut check
 
@@ -21,8 +27,9 @@ satisfies all four of these:
 3. **Introduces no dead code** — any new function has a caller added in the same commit.
 4. **Passes the revert test** — reverting this commit would remove only the described change, nothing else.
 
-Sharp message-level self-check: if the commit title would need the word "and"
-to describe what changed, the diff is not atomic.
+Sharp message-level self-check: if the title needs "and" to bridge unrelated
+changes, inspect whether the diff needs splitting. The word itself is not a
+failure; one coherent change can affect several operations.
 
 The `planning-commits` skill owns the reasoning behind these criteria and the
 techniques for splitting a non-atomic diff. This skill uses them as a checklist.
@@ -44,11 +51,61 @@ Common types:
 - `perf` — performance improvement without behavior change
 - `style` — formatting only (whitespace, semicolons)
 
-Message rules:
-- Summary under ~70 characters.
-- Imperative mood ("add", "fix", "remove" — not "added" or "adds").
-- Focus on *why* over *what*; the diff shows the what.
-- For non-trivial changes, add a body (blank line after summary) wrapped to ~72 characters.
+The subject identifies the concrete change in imperative mood ("add", "fix",
+"remove"). Prefer a specific behavior or boundary to "improve reliability" or
+"address review feedback". Aim for a full subject under about 70 characters;
+do not sacrifice meaning to hit a count. Choose the type from the actual diff:
+calling a behavior change `refactor` does not make it behavior-preserving.
+
+## Write for a reader of git show
+
+A reader months later should understand this unit without the PR discussion.
+Reduce the reasoning they must reconstruct. Read the diff against this commit's
+parent, relevant code, repository guidance, and the existing message before
+writing. Earlier or later stack layers are context, not evidence for what this
+commit implements. Ask for missing intent only when code and supplied context
+cannot establish it; never invent the author's motivation.
+
+Use a body when the subject leaves useful reasoning unexplained. State the
+action and its reason together, then the non-obvious invariant or consequence
+that makes the change understandable:
+
+- **Refactor:** identify the responsibility that moves and the concrete
+  behavior that must remain equivalent. Name preserved properties when
+  "unchanged behavior" would leave the reader guessing what to check.
+- **Bug fix:** explain a concrete failure sequence and the corrected outcome.
+  Include timing or partial-failure boundaries when they determine correctness.
+- **API or provider addition:** explain the contract and ownership of policy,
+  I/O, decoding, or cleanup where relevant. Distinguish availability from
+  adoption: exporting an implementation does not make it the default.
+
+These are lenses, not required sections. A tiny rename can need only a subject.
+Keep already-good text when it supplies the necessary reasoning. Do not turn
+every message into a miniature PR description, file inventory, or chronology
+of attempted solutions. Mention an adjacent commit only when it materially
+helps explain this boundary; the explanation must still stand on its own.
+
+Verify important claims at this commit's tree. Distinguish a logging attempt
+from guaranteed delivery, missing data from zero, and a disclosed limitation
+from a mitigation. Include exclusions only when they resolve a real scope
+question. Check changing provider or pricing facts if they are material;
+examples are not permanent facts about products.
+
+If validation is mentioned, distinguish test coverage, an observed run, and
+an author-reported result. Preserve relevant failures and untested paths unless
+newer evidence supersedes them; retain the result's source and revision when
+available, and identify missing provenance rather than inventing it. Editing
+prose does not establish that tests passed.
+
+Separate the body from the subject with a blank line. Wrap prose near 72
+characters at natural word boundaries; leave a long token, identifier, or URL
+intact. Try a shorter version: retain extra detail only when removing it would
+force the reader to reconstruct an important fact.
+
+Read [message examples](references/message-examples.md) when calibrating body
+depth or reviewing a substantial rewrite. They explain the judgment behind
+the edits rather than prescribing a template. Use `crafting-prs` for the
+review context spanning a whole PR.
 
 ## The message stays true under mutation
 

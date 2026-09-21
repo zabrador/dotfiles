@@ -45,11 +45,15 @@ The boundary between levels 1 and 2 is **shippability to users**. Feature planni
 
 ## crafting-commits
 
-**Scope:** Judging any commit at the moment it is created or its content changes.
+**Scope:** Judging any commit at the moment it is created or its content changes,
+and drafting, reviewing, or improving its subject and body.
 
 **Owns:**
 - A compact atomicity gut check (not full analysis), independent of any plan
 - Conventional Commits message format
+- Durable message reasoning: concrete changes, causal explanations, and
+  checkable invariants grounded in the individual commit's tree
+- Proportional detail and preservation of validation limits in message edits
 - The message-stays-true-under-mutation rule: after an amend, squash, or conflict resolution, the commit is re-judged as if being created now
 - The handoff to `planning-commits` when the gut check fails
 
@@ -65,6 +69,11 @@ The boundary between levels 1 and 2 is **shippability to users**. Feature planni
 - Deep atomicity reasoning (uses a compact checklist instead)
 - Refactor/feature/cleanup decomposition
 - Awareness of the plan — the gut check is plan-independent by design
+- PR titles and descriptions (`crafting-prs`)
+
+Drafting a message does not itself authorize committing or rewriting history.
+The creation gates do not require a fresh test run to suggest prose; messages
+must accurately distinguish test coverage, observed runs, and reported evidence.
 
 ## replanning-branches
 

@@ -1,0 +1,88 @@
+{
+  "skill_name": "crafting-prs",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Draft a replacement PR description in result.md, using only these supplied facts. Existing Changes: 'Put authentication, plugin, and model-access checks on the provider instance configured for that action.' The diff moves checks onto the instance and startup calls the same action factories as runtime. Defaults remain unchanged. Existing Testing: 'At abc123 the author reported 811/813 tests passing; the two subprocess failures were reproduced on the base. Error formatting was checked manually. Full deployment remains untested.' Keep Changes and Testing sections. Do not publish anything.",
+      "expected_output": "Preserve the useful opening, add the causal link, and retain all material validation limits with attribution.",
+      "expectations": [
+        "Connects shared startup/runtime factories to checking the models actually selected",
+        "Retains the 811/813 result, two failures reproduced on base, revision and author attribution",
+        "Keeps the manual check distinct from automated coverage and retains untested deployment",
+        "Does not invent a fresh run or perform external writes"
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "Write a PR title and description in result.md. Facts: this PR introduces a second provider implementation behind an existing harness interface. It owns command arguments, decoding, domain-report validation, and temporary-file cleanup. Available usage is extracted before validation; missing counts stay unknown. The shared lifecycle is unchanged. The implementation is exported for injection, but all action factories still select the original provider. A child PR later changes those defaults. Tests with mocked command runners assert decoding, cleanup, and usage on invalid reports; no run result is supplied. Do not publish.",
+      "expected_output": "Explain ownership and the implementation-versus-default boundary at this layer.",
+      "expectations": [
+        "Explains provider ownership and the unchanged shared lifecycle",
+        "Explicitly distinguishes availability for injection from unchanged defaults",
+        "Explains usage surviving validation failures without turning missing values into zero",
+        "Describes test coverage without claiming tests passed"
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "Improve this Changes section only, writing result.md: 'Rename offset to byteOffset to make its unit explicit; values and parsing behavior are unchanged.' The supplied diff consistently renames the identifier and its references, with no other changes. Draft only.",
+      "expected_output": "Retain the already-sufficient sentence or a comparably concise equivalent.",
+      "expectations": [
+        "Preserves the units motivation and unchanged behavior",
+        "Does not expand the tiny change into multiple review questions, a file inventory, or a multi-section essay",
+        "Does not claim a test run or mutate history"
+      ]
+    },
+    {
+      "id": 4,
+      "prompt": "Draft Changes and Testing in result.md. Existing Changes: 'Standardize logging and add invocation diagnostics: logger propagation, pretty/JSON output, completion records, elapsed time, per-call token usage.' Verified diff facts: commit one constructs a shared operational logger at the command boundary; command results stay on stdout. Commit two attempts a completion log in finally after provider work, validation, and cleanup. The sink can throw; that error is caught without replacing the original outcome. Each call owns fresh accounting; missing counts remain unknown. Mocked tests assert failure and overlapping-call behavior but no run result is available. Do not publish.",
+      "expected_output": "Separate the output and invocation contracts and qualify completion delivery.",
+      "expectations": [
+        "Uses the two commits as a meaningful review route rather than merely repeating subjects or files",
+        "Qualifies logging as an attempt rather than guaranteeing sink delivery",
+        "Preserves the full lifecycle, concurrency isolation, missing-count semantics, and original outcome",
+        "Does not claim the tests ran or passed"
+      ]
+    },
+    {
+      "id": 5,
+      "prompt": "Draft only a PR description in result.md. A parent PR groups body configuration under pr and adds configurable titles. A child escapes finding-dependent template input so discovered titles containing braces stay literal. You are describing the parent. The parent's old description claims brace-containing discovered titles remain literal. The parent tests cover body configuration and title generation; test execution is unknown. Use this supplied evidence without GitHub access.",
+      "expected_output": "Remove the parent's unsupported guarantee and describe its actual configuration behavior.",
+      "expectations": [
+        "Does not attribute literal-brace hardening to the parent",
+        "Describes the parent configuration API without a review-history narrative",
+        "Does not claim successful test execution or require remote access for the supplied draft"
+      ]
+    },
+    {
+      "id": 6,
+      "prompt": "Write a draft PR description in result.md. The only supplied description is 'Improve reliability.' There is no diff, repository, issue, or other context in this disposable workspace. Do not use the network.",
+      "expected_output": "Ask one focused question for missing evidence rather than inventing a failure or mitigation.",
+      "expectations": [
+        "Requests the missing change or diff context needed to explain behavior",
+        "Does not invent a causal story, guarantee, benchmark, or testing result"
+      ]
+    },
+    {
+      "id": 7,
+      "prompt": "Review this PR prose and write a corrected Changes section in result.md. Draft: 'Publishing has no filesystem access because it omits the task worktree and uses read-only mode.' Supplied implementation evidence: publishing omits the task worktree and uses a read-only sandbox, but the process can read other visible local files. The author explicitly chose to document this limitation. This is a prose-only draft request, not authorization to change code or history.",
+      "expected_output": "State the actual boundary and limitation without claiming disclosure enforces isolation.",
+      "expectations": [
+        "Explains that visible local files remain readable",
+        "Does not claim absence of the task worktree or read-only mode prevents all reads",
+        "Does not present documentation as a mitigation or change code/history"
+      ]
+    },
+    {
+      "id": 8,
+      "prompt": "Draft a PR title and description in result.md from these supplied facts. The already-committed branch mixes a payment retry fix with an independent dashboard theme change across three commits; each commit includes hunks from both concerns. Neither feature depends on the other. Tests cover both, but no run result is available. The current title is 'Improve user experience'. I only want prose right now; do not change code or history. Include any useful author-facing feedback separately from the proposed PR body.",
+      "expected_output": "Draft honest prose describing both changes and separately flag the concrete review obstacle, suggesting branch replanning without performing it.",
+      "expectations": [
+        "Accurately describes both independent changes rather than inventing a unifying rationale",
+        "Separately explains how mixed commit boundaries make review harder and suggests replanning the committed branch",
+        "Does not perform decomposition, git mutations, or code changes, or withhold the requested draft",
+        "Does not invent test execution results"
+      ]
+    }
+  ]
+}
