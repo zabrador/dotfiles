@@ -105,3 +105,77 @@ Do not append that the PR does not add caching, change providers, or fix unrelat
 bugs. Those exclusions do not explain the rename. In contrast, an injectable
 provider addition needs to distinguish availability from default selection if
 readers might otherwise infer that actions have switched providers.
+
+## Give each paragraph one explanatory job
+
+Both versions below convey the same facts. The problem is how much the reader
+must hold in mind at once, not missing precision.
+
+Dense:
+
+> Prevent duplicate PR claims by validating the entire persisted board on reads
+> and updates regardless of task filtering, prevalidating claims before label
+> mutations, and serializing writes through each store.
+
+Unfolded:
+
+> A board, the saved task list, must not contain two tasks claiming the same PR.
+> Check the entire list when reading or updating it, so selecting one task cannot
+> hide another owner.
+>
+> Check a proposed claim before changing GitHub labels. Updates through the same
+> store run one at a time, preventing two simultaneous claims from both passing
+> validation.
+
+The first paragraph explains the scope of the check; the second explains when
+it happens and how competing updates are handled. Do not add implementation
+history merely because it is available.
+
+## Distinguish commit identity from tested content
+
+Suppose the author reports 852 passing tests at the full stack tip. Corresponding
+file-tree hashes were checked after a message-only rewrite and all match; these
+tests do not depend on commit metadata. The base PR was not tested separately.
+
+Misleading emphasis:
+
+> 852 tests passed at an earlier revision. The current SHAs have not been tested.
+
+Better:
+
+> The author reported 852 tests passing across the stack. Subsequent edits changed
+> only commit messages; matching file-tree hashes confirm the code is unchanged.
+> The base PR was not tested separately.
+
+Keep the command and original revision in supporting evidence. Equal trees do
+not prove equality of external inputs or commit metadata if the tests depend on
+those. If equivalence was not checked, instead say the earlier run's applicability
+to the current code has not been verified. If relevant code changed, identify
+that change as the remaining verification gap. Do not turn uncertainty into a
+claim that tests failed or do not exist.
+
+## Choose caveats by consequence
+
+Suppose a label failure aborts the remaining campaign loop, leaving later
+campaigns unlabeled. The supported deployment uses one process; coordinating
+multiple processes is outside this change and no claim promises that support.
+
+Overqualified:
+
+> Label failures leave later campaigns unlabeled. Separate processes also need
+> coordination; serialization is not a distributed lock.
+
+Focused:
+
+> If a label update fails, the loop stops and later campaigns remain unlabeled.
+
+The retained limitation affects operation. The accurate multi-process caveat
+adds no decision here. Retain it if multiple writers are actually supported or
+if a claim of global uniqueness would otherwise mislead readers.
+
+## Leave a clear passage alone
+
+For the consistent identifier rename described above, the existing sentence
+already explains both the reason and preserved behavior. Returning it unchanged
+is a successful edit. Do not substitute synonyms or add headings to demonstrate
+that work happened.

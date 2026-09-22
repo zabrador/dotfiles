@@ -23,9 +23,10 @@ subject under about 70 characters without sacrificing meaning.
 ## Explain the change
 
 Assume an average engineer who may struggle with the subject and has neither
-project context nor the PR discussion. Read the diff against this commit's
-parent and relevant code before writing. Supplied evidence can support a draft;
-ask for missing intent rather than inventing the author's reason.
+project context nor the PR discussion. When code is available, inspect the diff
+against this commit's parent and relevant code. For a draft, sufficiently detailed
+supplied facts are evidence: do not demand raw diffs or repository access merely
+to restate them. Ask only for facts or intent needed to avoid inventing a claim.
 
 The subject names the change. Use a body when it leaves useful understanding
 unexplained: establish the problem, explain what changes, and connect that
@@ -35,18 +36,22 @@ remain equivalent. For a fix, make the failure sequence understandable. For an
 addition, distinguish making a capability available from callers adopting it.
 These are ways to explain, not mandatory sections.
 
-Optimize reading effort rather than word count. Keep sentences that connect
-ideas or define unfamiliar concepts; split dense inventories into a useful
-sequence. Keep already-clear text, and omit a body when the subject is enough.
-Read without the chat: can the reader explain what changes and why? Does each
-technical detail help them assess this unit?
+Give each paragraph one explanatory job. Introduce mechanisms after explaining
+the problems they solve; keep sentences that define terms or connect causes to
+consequences. Read without the chat: what must the reader infer or remember to
+understand the next sentence? Before rewriting existing prose, identify a concrete
+reader problem. If none exists, return it unchanged; a request to improve text
+is not evidence it needs rewriting. Omit a body when the subject is enough.
 
 Keep claims true at this commit's tree, including failure boundaries. Later
 stack layers cannot supply guarantees for an earlier commit. Preserve material
-limitations beside the claims they qualify, without cataloging irrelevant
-exclusions. Mention adjacent commits only when needed to explain this unit.
-If including validation, distinguish coverage, observed runs, and reported
-results; retain unresolved limitations, not a diary of superseded attempts.
+limitations beside the claims they qualify when they affect acceptance, operation,
+or interpretation of the change; prefer concrete consequences to disclaimers.
+Mention adjacent commits only when needed to explain this unit.
+Include validation only when useful to understanding this commit. Distinguish
+coverage, run results, and their source; an unknown result does not mean a test
+is absent. A changed SHA alone does not invalidate verification of unchanged
+code. Preserve applicable evidence and material uncertainty, not an execution diary.
 
 Separate subject and body with a blank line. Wrap prose near 72 characters at
 natural word boundaries; leave identifiers and URLs intact. Use

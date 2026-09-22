@@ -29,18 +29,20 @@ only when following that order would make the explanation harder to understand.
 Retain useful questions and structure; neither questions nor commit-by-commit bullets are
 mandatory. Follow the repository template and title conventions.
 
-Optimize reading effort, not word count. Give distinct ideas room to unfold;
-keep sentences that define a term or supply a causal link. Remove repetition,
-file inventories, and caveats that help no review decision. A short dense bullet
-can be worse than several connected sentences. Keep already-good prose; a
-small change may still need only one sentence.
+Give each paragraph one explanatory job. Separate the behavior readers need to
+understand from the mechanisms that implement it when introducing both at once
+would overload them. Keep definitions and causal links; remove repetition and
+file inventories. Optimize reading effort, not word count. Before rewriting,
+identify a concrete reader problem. If none exists, return the passage unchanged;
+a request to improve text is not evidence it needs rewriting.
 
 ## Ground the explanation
 
-Read the request, repository guidance, existing prose, and the diff against the
-PR's actual base. Inspect code and tests behind important claims. Sufficient
-supplied evidence can support a draft without remote access. Ask for missing
-intent only when the available evidence cannot establish it.
+Read the request and existing prose. When the repository is available, inspect
+its guidance, the diff against the PR's actual base, and code behind important
+claims. For a draft, sufficiently detailed supplied facts are evidence: do not
+require raw diffs or repository access merely to restate them. Ask only for facts
+or intent needed to avoid inventing a claim.
 
 Describe this layer at its own head: adding an implementation is different
 from selecting it as the default. Examples are writing guidance, not evidence
@@ -49,14 +51,23 @@ behavior, motivation, or causal story to make the narrative work.
 
 ## Put details where they help
 
-Keep behavior, reasoning, and qualifications needed to judge the change in the
-main explanation. Start Testing with a short account of current confidence:
-what was checked and what remains uncertain. Distinguish coverage from a run,
-manual checks from automated tests, and reported results from observed ones.
+Keep behavior and reasoning in the main explanation. Keep a limitation prominent
+when it affects acceptance, operation, or interpretation of a claim. Before
+retaining one, identify the decision it changes. Accuracy alone is not a reason
+to include it: omit caveats with no such consequence, and move useful technical
+background into supporting details. Prefer concrete consequences to disclaimers.
+
+Start Testing with current confidence: what was checked, the result and its
+source, and whether it applies to this code. Distinguish coverage from execution,
+manual from automated checks, and reported from observed results. Unknown run
+results do not establish absent tests or coverage.
 
 Keep unresolved failures and untested paths visible when they limit confidence.
-State relevant scope, such as a whole-stack run rather than a run at this head.
-Put reproduction commands, detailed provenance, and useful historical records
+State scope, such as a whole-stack run rather than a separate run for this PR.
+A changed SHA alone does not establish a testing gap: retain verification when
+a message-only rewrite preserved the relevant tested content. If equivalence is
+unknown, say so; do not infer it from the rewrite's intent. Put commands,
+original revisions, detailed provenance, and useful historical records
 in linked or collapsed evidence. Omit superseded failures with no remaining
 consequence. A prose-edit session's history is usually not testing evidence;
 never imply that editing the description established a passing test run.
@@ -65,8 +76,9 @@ never imply that editing the description established a passing test run.
 
 Read without the chat: could someone with weak subject knowledge explain the
 problem, what changes, and why it is preferable? Are necessary terms introduced
-before use? Does each technical detail help a review decision, and is it placed
-where the reader can understand it? Preserve useful connections when shortening.
+before use? What must the reader infer or remember to understand the next
+sentence? Does each detail help a review decision where it appears? Preserve
+useful connections when shortening.
 See [examples](references/review-examples.md) for substantial rewrites.
 
 If the difficulty comes from unrelated changes or unclear design boundaries,

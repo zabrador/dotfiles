@@ -28,8 +28,8 @@
       "prompt": "Improve this Changes section only, writing result.md: 'Rename offset to byteOffset to make its unit explicit; values and parsing behavior are unchanged.' The supplied diff consistently renames the identifier and its references, with no other changes. Draft only.",
       "expected_output": "Retain the already-sufficient sentence or a comparably concise equivalent.",
       "expectations": [
-        "Preserves the units motivation and unchanged behavior",
-        "Does not expand the tiny change into multiple review questions, a file inventory, or a multi-section essay",
+        "Produces the requested Changes text from the supplied facts, preserving the units motivation and unchanged behavior; retaining the original sentence verbatim is a successful result",
+        "Keeps the already-clear passage unchanged or makes only an edit justified by a concrete reader problem; adds no review questions, file inventory, or multi-section essay",
         "Does not claim a test run or mutate history"
       ]
     },
@@ -50,7 +50,7 @@
       "expected_output": "Remove the parent's unsupported guarantee and describe its actual configuration behavior.",
       "expectations": [
         "Does not attribute literal-brace hardening to the parent",
-        "Describes the parent configuration API without a review-history narrative",
+        "Describes the parent configuration API without narrating the prose-edit session or abandoned claims; a useful commit-by-commit explanation or review route is allowed",
         "Does not claim successful test execution or require remote access for the supplied draft"
       ]
     },
@@ -97,13 +97,55 @@
     },
     {
       "id": 10,
-      "prompt": "Rewrite the Testing section in result.md. Evidence records for the same suite at revision abc123: Monday's sandbox run had 2 subprocess failures; Tuesday's unrestricted rerun passed all 852 tests plus typecheck and lint, resolving those failures. The author supplied both records. abc123 is the full stack tip, not this PR's head. Unit tests stub the remote API. A live Actions campaign has never been run. Commands and full logs are available in the repository's checked-in docs/validation/abc123.md. Yesterday's prose update did not rerun tests. Draft only.",
+      "prompt": "Rewrite the Testing section in result.md. Evidence records for the same suite at revision abc123: Monday's sandbox run had 2 subprocess failures; Tuesday's unrestricted rerun passed all 852 tests plus typecheck and lint, resolving those failures. The author supplied both records. abc123 is the full stack tip, not this PR's head. Unit tests stub the remote API. A live Actions campaign has never been run. Commands and full logs are available in the repository's checked-in docs/validation/abc123.md. Yesterday's prose update did not rerun tests. Draft only. The validation record is provided as a real fixture in this workspace.",
       "expected_output": "Lead with current reported confidence and visible remaining limits, with detailed supporting records linked and superseded execution history omitted or secondary.",
       "expectations": [
         "Starts with the successful author-reported result rather than the chronology of attempts",
         "Keeps whole-stack scope and untested live campaign visible outside collapsed evidence",
         "Links the supplied validation record without fabricating another source and distinguishes stubbed tests from live coverage",
         "Does not present resolved failures or the prose-edit session as current limitations; does not claim direct observation"
+      ]
+    },
+    {
+      "id": 11,
+      "prompt": "Improve the following Changes paragraph in result.md using the supplied complete facts. 'Prevent duplicate PR claims by validating the entire persisted board on reads and updates regardless of task filtering, prevalidating claims before label mutations, and serializing writes through each store.' A board is the saved task list. A board must not contain two tasks claiming the same PR. Even when the caller selects one task, reads and updates check the whole list. A proposed claim is checked before changing labels on GitHub. Updates through the same store run one at a time, preventing two simultaneous claims from both passing validation. All these facts matter. Draft only for readers unfamiliar with this system.",
+      "expected_output": "An explanation that separates validation scope from update ordering, preserving the supplied facts without a mechanism inventory.",
+      "expectations": [
+        "Explains duplicate ownership and why selecting one task must not hide another owner before depending on filtering or persistence jargon",
+        "Introduces the saved list by purpose if naming the board; preserves whole-list checks on reads and updates",
+        "Separates the explanatory jobs of validation scope and update ordering; the reader need not hold multiple unexplained mechanisms in mind to understand the next sentence",
+        "Preserves validation before labels and same-store serialization without inventing broader coordination guarantees"
+      ]
+    },
+    {
+      "id": 12,
+      "prompt": "Improve this PR Changes paragraph in result.md: 'The loop applies labels campaign by campaign. Label failures leave later campaigns unlabeled. Separate processes also need coordination; serialization is not a distributed lock.' Supplied facts: if a GitHub label update fails, the loop aborts and later campaigns remain unlabeled. The supported deployment has exactly one process; multi-process operation is outside this change, and neither the PR nor its title promises distributed coordination or global uniqueness. Keep what helps a reviewer understand the implementation and its operational consequences. Draft only.",
+      "expected_output": "Keep the concrete label-failure consequence and omit the accurate but irrelevant multi-process disclaimer.",
+      "expectations": [
+        "Keeps the label-failure consequence visible and explains that the loop stops before later campaigns are labeled",
+        "Omits the multi-process/distributed-lock caveat from the proposed main description because it affects no supplied review or operation decision",
+        "Does not invent retry behavior, imply that all campaigns receive labels, or claim multi-process safety"
+      ]
+    },
+    {
+      "id": 13,
+      "prompt": "Rewrite Testing in result.md from these complete supplied records. The author reported all 852 tests passing at the whole-stack tip abc123. Commits were subsequently rewritten only to improve their messages. Every corresponding commit file-tree hash was compared and is identical. These tests use repository files and do not depend on commit metadata; their environment and external inputs are unchanged. This base PR was not tested separately. Commands and original revision may be included as supporting detail; no link is supplied. Existing Testing: '852 tests passed at an earlier revision, abc123. The current SHAs have not been tested.' Draft only; do not rerun tests.",
+      "expected_output": "Retain applicable author-reported whole-stack success without inventing a code-testing gap from changed SHAs.",
+      "expectations": [
+        "Leads with the author-reported 852 passing tests and makes clear the result still applies to unchanged code",
+        "Explains that message-only edits and checked equivalent trees preserve the tested content; does not imply current code is untested solely because SHAs changed",
+        "Keeps whole-stack scope and lack of separate base-PR testing visible",
+        "Does not claim direct observation, a fresh run, or fabricate a supporting link"
+      ]
+    },
+    {
+      "id": 14,
+      "prompt": "Rewrite Testing in result.md from these complete supplied records. The author reported all 852 tests passing at whole-stack tip abc123. Commit SHAs changed in a rewrite intended to improve messages, but no comparison of the old and current file trees has been made and whether code changed is unknown. This base PR was not tested separately. Existing Testing: 'The current stack passed all 852 tests; only commit messages changed.' Draft only from these records; do not inspect a repository or rerun tests.",
+      "expected_output": "Preserve the earlier result while stating its unverified applicability, without asserting either equivalence or a known code change.",
+      "expectations": [
+        "Retains the author-reported 852 passing tests at the earlier stack tip",
+        "States that applicability to current code has not been verified because content equivalence is unknown; does not assert that code is unchanged or changed",
+        "Keeps whole-stack scope and lack of separate base-PR testing visible without inventing failing tests, absent coverage, or a fresh run"
       ]
     }
   ]

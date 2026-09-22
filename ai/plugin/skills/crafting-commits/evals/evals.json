@@ -59,7 +59,7 @@
       "expected_output": "Correct both scope and validation claims at this commit's tree.",
       "expectations": [
         "Subject and body describe implementing a provider without claiming adoption",
-        "Removes the unsupported tests-pass claim without inventing replacement results",
+        "Removes the unsupported tests-pass claim without inventing results or asserting that live-provider tests or coverage do not exist; omitting validation prose is acceptable",
         "Keeps the message understandable without the child or PR discussion",
         "Does not rewrite history"
       ]
@@ -69,8 +69,19 @@
       "prompt": "Improve this commit message; write result.md. Subject: 'refactor(harness): use action defaults for preflight'. Body: 'Create startup harnesses through the same action factories used at runtime so readiness checks use the models each action will actually select.' The supplied diff implements exactly that and nothing else. Draft only.",
       "expected_output": "Retain the already-clear causal explanation.",
       "expectations": [
-        "Retains the mechanism and reason with comparable brevity",
+        "Keeps the already-clear explanation unchanged or makes only an edit justified by a concrete reader problem; does not rewrite merely to substitute synonyms",
         "Does not add a file inventory, mandatory headings, unsupported tests, or unrelated scope exclusions"
+      ]
+    },
+    {
+      "id": 8,
+      "prompt": "Draft a commit subject and body in result.md using only the following complete facts; no repository is available and no Git operations are requested. Existing body: 'Validate all persisted tasks independent of read filters and serialize writes through each store to enforce unique PR ownership before label mutation.' A task list is saved on disk. No two tasks may claim the same PR. Reads and updates validate the entire list, even when a caller selects only one task. Updates through the same store run one at a time; each proposed claim is checked before changing GitHub labels. No other behavior changes. Improve the explanation for someone unfamiliar with the task store.",
+      "expected_output": "A concrete subject and body that unfold the ownership problem, validation scope, and update ordering without requiring a raw diff.",
+      "expectations": [
+        "Produces a draft from supplied facts with a concrete imperative Conventional Commits subject",
+        "Explains why selecting a task could hide another owner before introducing whole-list validation",
+        "Gives validation scope and competing-update ordering room to unfold; adjacent sentences make their causal relationship explicit rather than packing mechanisms into an inventory",
+        "Preserves same-store serialization and validation before labels without inventing cross-process guarantees or test results"
       ]
     }
   ]

@@ -33,6 +33,8 @@ run_case() {
   expectations=$(jq -c ".evals[$i].expectations" "$cases")
   ws=$work/case-$i
   mkdir -p "$ws"
+  fixture="$skill_dir/evals/fixtures/$(jq -r ".evals[$i].id" "$cases")"
+  if [ -d "$fixture" ]; then cp -R "$fixture/." "$ws/"; fi
 
   # The pre-approval sentence matters: machine policy may (correctly) require
   # explicit user confirmation before commits, and no user exists in a

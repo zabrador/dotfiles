@@ -54,3 +54,42 @@ Subject: `refactor(harness): use action defaults for startup checks`
 No extra paragraph is needed merely to mention ownership, cleanup, or exclusions.
 A consistent rename may need only a subject:
 `refactor(parser): rename tokenOffset to byteOffset`.
+
+## Correct unsupported evidence without inventing a limitation
+
+Suppose this commit adds an injectable provider; a later commit switches action
+factories to it. Supplied tests cover decoding and cleanup with mocks, but their
+execution result is unknown.
+
+Before: `feat(harness): switch actions to the second provider`, with a body
+claiming "Tests pass."
+
+A supported subject is `feat(harness): add an injectable second provider`.
+Explain the capability and unchanged default when useful. Remove "Tests pass";
+there is no need to replace it with a testing disclaimer. If discussing evidence,
+say which assertions the supplied tests cover and that their run result is
+unknown. Do not infer that no live-provider test exists.
+
+A sufficiently detailed description of the resulting change supports this draft
+without a raw diff. Direct inspection is appropriate when available or needed to
+resolve a material ambiguity, not a prerequisite for every writing request.
+
+## Unpack a dense body without expanding the scope
+
+Dense:
+
+> Validate all persisted tasks independent of read filters and serialize writes
+> through each store to enforce unique PR ownership before label mutation.
+
+Clearer, given those facts:
+
+> Selecting one task must not hide another task claiming the same PR. Validate
+> the whole saved task list even when the caller requests only part of it.
+>
+> Updates through the same store run one at a time. Check each proposed claim
+> before changing GitHub labels so competing updates cannot both pass validation.
+
+Each paragraph answers a different question about the same change. The second
+still limits serialization to the same store; it does not invent cross-process
+coordination. Keep this additional explanation only when the subject leaves it
+usefully unexplained.
