@@ -94,22 +94,47 @@ still limits serialization to the same store; it does not invent cross-process
 coordination. Keep this additional explanation only when the subject leaves it
 usefully unexplained.
 
-## Point to the central implementation in a broad commit
+## Integrate focal paths into the explanation
 
-When a few central files are surrounded by caller and test changes, a short
-reading route can complement the explanation of why the change exists. For a
-harness refactor, assuming these responsibilities are verified at this commit
-(paths below are relative to `scripts/ruly/src/ruly/`):
+For a broad harness refactor, assuming the supplied responsibilities and behavior
+are verified at this commit:
 
-> Start with `agents/harness.ts` for the contract callers depend on, then
-> `agents/base-agent-harness.ts` and `agents/claude-agent.ts` for the shared
-> invocation flow and Claude-specific implementation. Review
-> `action-harnesses.ts` for how actions select their configured harnesses.
->
-> The main design question is whether those boundaries let another provider
-> fit without teaching each action its command and response details.
+```text
+refactor(ruly): introduce action-owned class-based harnesses
 
-The paths reduce searching; the question gives the reading a purpose. This is
-not a list of every changed file or a reason to skip the supporting changes.
-Do not call caller migrations mechanical unless behavior preservation is
-established. A small rename with an obvious starting point needs no such route.
+Agent configuration and Claude response handling were spread across
+Worker, campaign configuration, and actions. Put invocation behind a
+configured harness so actions can choose a provider without understanding
+its command line or response format.
+
+The contract in agents/harness.ts accepts an action's inputs and returns
+a validated report. agents/base-agent-harness.ts owns the shared run
+entry point; agents/claude-agent.ts owns Claude's command construction,
+schema conversion, and decoding.
+
+Actions select their defaults through factories or accept an injected
+harness; actions/execute.ts shows the caller migration. Worker retains
+finding interpretation and eligibility. Remove campaign/worker model
+and budget settings and their CLI overrides.
+
+Claude/Opus defaults and existing budgets remain unchanged.
+
+Paths are relative to scripts/ruly/src/ruly.
+```
+
+The paths locate the implementation while the sentences explain it. A second
+walkthrough would repeat those responsibilities; a closing design question
+would repeat the opening's purpose. Explicit reading order earns space when
+it helps readers establish something they otherwise could not follow.
+Supporting changes still require review; do not call migrations mechanical
+without evidence of preserved behavior. Small changes may need no paths.
+
+## Choose content independently of the old message's size
+
+An old message may explain the same provider boundary in its introduction,
+per-file paragraphs, and a closing review guide. Select the useful facts first:
+the separation and reason, relevant behavior changes, and preserved defaults.
+Explain each once, using focal paths where helpful. Do not polish all three
+versions of the same explanation merely because they were supplied. A short
+and a bloated starting message for the same change should lead to comparable
+reading effort, without a fixed word count or a requirement to retain wording.

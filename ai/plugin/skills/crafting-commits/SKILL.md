@@ -28,6 +28,12 @@ against this commit's parent and relevant code. For a draft, sufficiently detail
 supplied facts are evidence: do not demand raw diffs or repository access merely
 to restate them. Ask only for facts or intent needed to avoid inventing a claim.
 
+Write the message the commit needs. Treat the existing message as evidence,
+not a target length or structure. First select the supported change, reason,
+and material behavior boundaries readers need to understand or assess this
+commit; then write around them. Wording and structure may change freely.
+Returning an already-sufficient message unchanged is also fine.
+
 The subject names the change. Use a body when it leaves useful understanding
 unexplained: establish the problem, explain what changes, and connect that
 change to the benefit. Introduce necessary terms before relying on them. For a
@@ -39,14 +45,16 @@ These are ways to explain, not mandatory sections.
 Give each paragraph one explanatory job. Introduce mechanisms after explaining
 the problems they solve; keep sentences that define terms or connect causes to
 consequences. Read without the chat: what must the reader infer or remember to
-understand the next sentence? Before rewriting existing prose, identify a concrete
-reader problem. If none exists, return it unchanged; a request to improve text
-is not evidence it needs rewriting. Omit a body when the subject is enough.
+understand the next sentence? Each paragraph should add something the reader
+still needs. Remove repeated explanations and unnecessary background even when
+individual sentences are clear. Omit a body when the subject is enough.
 
 When a commit touches many files and its central implementation is hard to
-locate, point reviewers to the few files worth starting with and explain what
-to examine there. Include a review question when it helps focus judgment; avoid
-listing every touched file. Omit navigation when the starting point is obvious.
+locate, integrate focal paths beside the responsibilities or behavior they
+implement. Let explanation and navigation work in the same sentence. Use
+explicit reading instructions only when order matters; omit a separate review
+question when the explanation already identifies the judgment. Avoid duplicated
+walkthroughs and file inventories; omit navigation when the start is obvious.
 
 Keep claims true at this commit's tree, including failure boundaries. Later
 stack layers cannot supply guarantees for an earlier commit. Preserve material

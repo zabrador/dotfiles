@@ -1,7 +1,7 @@
 {
   "name": "zabrabot",
   "description": "An opinionated collection of coding-agent skills.",
-  "version": "0.4.3",
+  "version": "0.4.4",
   "author": {
     "name": "Robert Zablit"
   },

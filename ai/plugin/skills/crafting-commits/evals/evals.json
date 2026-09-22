@@ -67,9 +67,9 @@
     {
       "id": 7,
       "prompt": "Improve this commit message; write result.md. Subject: 'refactor(harness): use action defaults for preflight'. Body: 'Create startup harnesses through the same action factories used at runtime so readiness checks use the models each action will actually select.' The supplied diff implements exactly that and nothing else. Draft only.",
-      "expected_output": "Retain the already-clear causal explanation.",
+      "expected_output": "Explain the supported mechanism and benefit with low reading effort, whether reusing or rewriting the original.",
       "expectations": [
-        "Keeps the already-clear explanation unchanged or makes only an edit justified by a concrete reader problem; does not rewrite merely to substitute synonyms",
+        "Explains that startup uses runtime action factories so checks follow the selected models, without invented past failures or redundant background; unchanged wording is neither required nor rewarded",
         "Does not add a file inventory, mandatory headings, unsupported tests, or unrelated scope exclusions"
       ]
     },
@@ -87,12 +87,34 @@
     {
       "id": 9,
       "prompt": "Draft a commit subject and body in result.md from these complete supplied facts; no Git operations or network access. The commit changes 28 files to separate request execution from HTTP details so another transport can be added without putting encoding and response parsing in each caller. Existing body: 'Separate transport-specific request handling from callers behind a shared interface; HTTP remains the default.' Central files: src/transport.ts defines the caller-facing send contract; src/request-runner.ts owns the shared timeout and retry flow; src/http-transport.ts owns HTTP encoding and response parsing; src/transport-defaults.ts selects the configured transport for callers. The other 24 files are caller migrations and regression tests; their behavior preservation has not been independently established. HTTP remains the default and this commit adds no second transport. Improve the message for someone reviewing the entire commit.",
-      "expected_output": "Keep the purpose clear and add a short route to the central implementation with concrete aspects to examine, without cataloging all files or dismissing supporting changes.",
+      "expected_output": "Explain the purpose and boundaries with focal paths integrated into the prose, without a duplicated walkthrough.",
       "expectations": [
         "Explains the separation and benefit without claiming that a second transport is implemented or selected",
-        "Provides a short useful progression through supplied focal paths and explains what to examine there, rather than merely listing filenames",
-        "Directs attention to a concrete judgment such as whether transport details stay out of callers or shared timeout/retry responsibilities stay in the runner; no prescribed question wording is required",
+        "Integrates useful focal paths with their responsibilities or behavior rather than repeating the explanation in a separate walkthrough or listing filenames",
+        "Makes the design judgment understandable, such as keeping transport details out of callers, without requiring a separate question or repeating a judgment already clear in the explanation",
         "Does not invent file responsibilities, label supporting changes mechanical or safe to skip, or expand into an exhaustive file inventory"
+      ]
+    },
+    {
+      "id": 10,
+      "prompt": "Rewrite the existing commit message quoted below using these complete supplied facts. Create a new result.md file containing your rewritten message; draft only, no network or Git operations. This commit changes 18 files. Previously each export caller encoded CSV headers and rows. Now src/export-format.ts defines the formatting contract and src/csv-format.ts owns CSV header and row encoding, so another format can be added without duplicating encoding across callers. The remaining files migrate callers and test encoding. CSV remains the only format and the default; escaping, column order, and newline behavior remain unchanged. No test execution result is supplied. Existing message: refactor(export): centralize CSV formatting\n\nMove CSV header and row encoding behind a shared contract so another format can be added without putting encoding in every caller. CSV remains the only format and default; escaping, column order, and newlines are unchanged.",
+      "expected_output": "A clear, accurate message with comparable reading effort to the paired case for the same change; evaluate cases 10 and 11 together for length anchoring.",
+      "expectations": [
+        "Explains the moved encoding and why the contract enables another format without claiming one was added",
+        "Preserves CSV as the only/default format and unchanged escaping, column order, and newline behavior without inventing test results",
+        "Uses focal paths alongside responsibilities without a duplicate reading guide, repeated rationale, or a repeated summary of preserved behavior",
+        "Chooses useful content independently of the starting message length; avoids redundant background while retaining causal links, with no fixed wording or word-count requirement"
+      ]
+    },
+    {
+      "id": 11,
+      "prompt": "Rewrite the existing commit message quoted below using these complete supplied facts. Create a new result.md file containing your rewritten message; draft only, no network or Git operations. This commit changes 18 files. Previously each export caller encoded CSV headers and rows. Now src/export-format.ts defines the formatting contract and src/csv-format.ts owns CSV header and row encoding, so another format can be added without duplicating encoding across callers. The remaining files migrate callers and test encoding. CSV remains the only format and the default; escaping, column order, and newline behavior remain unchanged. No test execution result is supplied. Existing message: refactor(export): centralize CSV formatting\n\nExport callers previously each encoded CSV headers and rows. CSV headers and rows were therefore encoded in each caller. Introducing another format would require encoding changes in callers. This is why the formatting boundary matters.\n\nsrc/export-format.ts defines the formatting contract. The contract is the place where callers connect to format-specific encoding. It is a common contract for formatting. src/csv-format.ts owns CSV header and row encoding. Headers and rows are both handled by the CSV implementation.\n\nOther changed files migrate callers and test encoding. Callers now use the formatting contract. The encoding tests cover encoding behavior. Separating encoding makes it possible to add another format without duplicating encoding across callers. No second format is added here.\n\nCSV remains the only format. CSV remains the default. Escaping is unchanged. Column order is unchanged. Newline behavior is unchanged. These preserved properties mean the formatting refactor preserves these aspects of CSV output.\n\nSuggested review order: start with src/export-format.ts for the contract. Then read src/csv-format.ts for header and row encoding. Then inspect callers and encoding tests. The main question is whether another format can be added without spreading encoding across callers.\n\nIn summary, this centralizes formatting while retaining CSV as the default and only format, with escaping, column order, and newlines unchanged.",
+      "expected_output": "A clear, accurate message with comparable reading effort to the paired case for the same change; evaluate cases 10 and 11 together for length anchoring.",
+      "expectations": [
+        "Explains the moved encoding and why the contract enables another format without claiming one was added",
+        "Preserves CSV as the only/default format and unchanged escaping, column order, and newline behavior without inventing test results",
+        "Uses focal paths alongside responsibilities without a duplicate reading guide, repeated rationale, or a repeated summary of preserved behavior",
+        "Chooses useful content independently of the starting message length; avoids redundant background while retaining causal links, with no fixed wording or word-count requirement"
       ]
     }
   ]
