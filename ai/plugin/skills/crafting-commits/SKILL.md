@@ -43,6 +43,11 @@ understand the next sentence? Before rewriting existing prose, identify a concre
 reader problem. If none exists, return it unchanged; a request to improve text
 is not evidence it needs rewriting. Omit a body when the subject is enough.
 
+When a commit touches many files and its central implementation is hard to
+locate, point reviewers to the few files worth starting with and explain what
+to examine there. Include a review question when it helps focus judgment; avoid
+listing every touched file. Omit navigation when the starting point is obvious.
+
 Keep claims true at this commit's tree, including failure boundaries. Later
 stack layers cannot supply guarantees for an earlier commit. Preserve material
 limitations beside the claims they qualify when they affect acceptance, operation,

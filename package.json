@@ -1,7 +1,7 @@
 {
   "name": "zabrabot",
   "private": true,
-  "version": "0.4.2",
+  "version": "0.4.3",
   "keywords": ["pi-package"],
   "pi": {
     "skills": ["./ai/plugin/skills"]

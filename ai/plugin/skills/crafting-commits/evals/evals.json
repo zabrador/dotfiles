@@ -23,11 +23,11 @@
     },
     {
       "id": 3,
-      "prompt": "Write a commit message in result.md for a consistent rename from tokenOffset to byteOffset; it clarifies the unit and changes no behavior. Draft only.",
+      "prompt": "Write a commit message in result.md for a consistent rename from tokenOffset to byteOffset in parser.ts and its existing parser.test.ts assertions; it clarifies the unit and changes no behavior. These are the only two touched files. Draft only.",
       "expected_output": "A specific Conventional Commits subject, with no unnecessary body or execution workflow.",
       "expectations": [
         "Uses a concrete imperative subject accurately describing the rename",
-        "Avoids a multi-paragraph body or unrelated caveats for this small change",
+        "Avoids an unnecessary reading route, file inventory, multi-paragraph body, or unrelated caveats for this small change with an obvious starting point",
         "Does not require tests or create commits just to draft the message"
       ]
     },
@@ -82,6 +82,17 @@
         "Explains why selecting a task could hide another owner before introducing whole-list validation",
         "Gives validation scope and competing-update ordering room to unfold; adjacent sentences make their causal relationship explicit rather than packing mechanisms into an inventory",
         "Preserves same-store serialization and validation before labels without inventing cross-process guarantees or test results"
+      ]
+    },
+    {
+      "id": 9,
+      "prompt": "Draft a commit subject and body in result.md from these complete supplied facts; no Git operations or network access. The commit changes 28 files to separate request execution from HTTP details so another transport can be added without putting encoding and response parsing in each caller. Existing body: 'Separate transport-specific request handling from callers behind a shared interface; HTTP remains the default.' Central files: src/transport.ts defines the caller-facing send contract; src/request-runner.ts owns the shared timeout and retry flow; src/http-transport.ts owns HTTP encoding and response parsing; src/transport-defaults.ts selects the configured transport for callers. The other 24 files are caller migrations and regression tests; their behavior preservation has not been independently established. HTTP remains the default and this commit adds no second transport. Improve the message for someone reviewing the entire commit.",
+      "expected_output": "Keep the purpose clear and add a short route to the central implementation with concrete aspects to examine, without cataloging all files or dismissing supporting changes.",
+      "expectations": [
+        "Explains the separation and benefit without claiming that a second transport is implemented or selected",
+        "Provides a short useful progression through supplied focal paths and explains what to examine there, rather than merely listing filenames",
+        "Directs attention to a concrete judgment such as whether transport details stay out of callers or shared timeout/retry responsibilities stay in the runner; no prescribed question wording is required",
+        "Does not invent file responsibilities, label supporting changes mechanical or safe to skip, or expand into an exhaustive file inventory"
       ]
     }
   ]

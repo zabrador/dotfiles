@@ -93,3 +93,23 @@ Each paragraph answers a different question about the same change. The second
 still limits serialization to the same store; it does not invent cross-process
 coordination. Keep this additional explanation only when the subject leaves it
 usefully unexplained.
+
+## Point to the central implementation in a broad commit
+
+When a few central files are surrounded by caller and test changes, a short
+reading route can complement the explanation of why the change exists. For a
+harness refactor, assuming these responsibilities are verified at this commit
+(paths below are relative to `scripts/ruly/src/ruly/`):
+
+> Start with `agents/harness.ts` for the contract callers depend on, then
+> `agents/base-agent-harness.ts` and `agents/claude-agent.ts` for the shared
+> invocation flow and Claude-specific implementation. Review
+> `action-harnesses.ts` for how actions select their configured harnesses.
+>
+> The main design question is whether those boundaries let another provider
+> fit without teaching each action its command and response details.
+
+The paths reduce searching; the question gives the reading a purpose. This is
+not a list of every changed file or a reason to skip the supporting changes.
+Do not call caller migrations mechanical unless behavior preservation is
+established. A small rename with an obvious starting point needs no such route.
