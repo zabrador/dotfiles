@@ -14,9 +14,9 @@ ensure_package() {
   fi
   echo "Installing $command..."
   if [ "$pkg_manager" = brew ]; then
-    brew install "$brew_formula"
+    brew install -y "$brew_formula"
   else
-    sudo apt install "$apt_package"
+    sudo apt install -y "$apt_package"
   fi
   echo "...$command installation complete!"
 }

@@ -7,10 +7,6 @@ script_dir=$(cd "$(dirname "$0")" && pwd)
 
 # --- Package manager / system dependencies -----------------------------------
 
-# Skip Homebrew's "ask before downloading" prompt. Unset after the brew
-# installs below so a sourced run does not leak this into the caller.
-export HOMEBREW_NO_ASK=1
-
 pkg_manager=""
 if type "brew" > /dev/null; then
   pkg_manager=brew
@@ -25,8 +21,6 @@ fi
 ensure_package stow
 ensure_package jq
 ensure_package tomlq python-yq yq
-
-unset HOMEBREW_NO_ASK
 
 # --- Antigen ----------------------------------------------------------------
 
