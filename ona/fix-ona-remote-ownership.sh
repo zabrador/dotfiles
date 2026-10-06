@@ -10,6 +10,7 @@ vscode_home="$(getent passwd vscode 2>/dev/null | cut -d: -f6)"
 # A trailing slash includes a directory's descendants; other entries match one file.
 ownership_paths=(
   "$vscode_home/.claude/"
+  "$vscode_home/.zshenv"
 )
 
 for entry in "${ownership_paths[@]}"; do

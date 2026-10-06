@@ -10,6 +10,14 @@ echo "Starting Ona remote ownership watchers..."
 bash "$ona_dir/fix-ona-remote-ownership.sh"
 echo "...Ona remote ownership watchers running!"
 
+# Agent shells skip .zshrc; append Ona secrets loading to .zshenv once, preserving existing contents.
+if [ -f /etc/profile.d/ona-secrets.sh ]; then
+  ona_secrets_line='. /etc/profile.d/ona-secrets.sh'
+  if ! grep -Fqx "$ona_secrets_line" "$HOME/.zshenv" 2>/dev/null; then
+    printf '\n%s\n' "$ona_secrets_line" >> "$HOME/.zshenv" || exit 1
+  fi
+fi
+
 # --- Claude plugin opt-outs ---------------------------------------------------
 
 # Project settings can force-enable plugins for everyone; `--scope local`

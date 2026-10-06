@@ -29,7 +29,7 @@ The installer:
 6. Deep-merges [`ai/codex/config.toml`](ai/codex/config.toml) into `~/.codex/config.toml` so Codex knows which plugins to use
 7. Updates each harness that's on `PATH` (`pi update --extensions`, `claude plugin marketplace update`, `codex plugin marketplace upgrade`)
 8. In Codespaces, strips signing-related Git config sections; otherwise, if `SSH_PRIVATE_KEY_ED25519` is set, writes that key into `~/.ssh`
-9. On Ona hosts, runs [`ona/setup.sh`](ona/setup.sh).
+9. On Ona hosts, runs [`ona/setup.sh`](ona/setup.sh) to repair ownership and append the secrets source line to `~/.zshenv` once, preserving existing contents (creating the file if absent).
 10. Ensures Zsh is listed in `/etc/shells` and sets it as the login shell (`chsh`)
 
 ### What gets linked
@@ -46,8 +46,8 @@ The `shell/` Stow package maps these files into `~/`:
 ### Assumptions
 
 - Local (non-SSH) sessions use `code-insiders` as `$EDITOR` and as Git's diff/merge tool
-- On Ona hosts, secrets from `/etc/profile.d/ona-secrets.sh` are sourced into Zsh
-- On Ona hosts, [`ona/fix-ona-remote-ownership.sh`](ona/fix-ona-remote-ownership.sh) repairs ownership for the paths in its `ownership_paths` array (initially `~vscode/.claude/` recursively), then watches for new or replaced files via `inotifywait`
+- On Ona hosts, `~/.zshenv` sources secrets from `/etc/profile.d/ona-secrets.sh`, including for non-interactive agent commands
+- On Ona hosts, [`ona/fix-ona-remote-ownership.sh`](ona/fix-ona-remote-ownership.sh) repairs ownership for the paths in its `ownership_paths` array (`~vscode/.claude/` recursively and `~vscode/.zshenv`), then watches for new or replaced files via `inotifywait`
 
 ## AI
 
