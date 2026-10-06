@@ -23,4 +23,4 @@ export DOTFILES_ROOT="${${:-$HOME/.zshrc}:A:h:h}"
 [ -f /etc/profile.d/ona-secrets.sh ] && . /etc/profile.d/ona-secrets.sh
 
 # Ensure Ona ownership watcher is running
-[ "$IS_ON_ONA" = "true" ] && sh "$DOTFILES_ROOT/ona/fix-claude-remote-ownership.sh"
+[ "$IS_ON_ONA" = "true" ] && bash "$DOTFILES_ROOT/ona/fix-ona-remote-ownership.sh"

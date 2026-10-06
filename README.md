@@ -47,7 +47,7 @@ The `shell/` Stow package maps these files into `~/`:
 
 - Local (non-SSH) sessions use `code-insiders` as `$EDITOR` and as Git's diff/merge tool
 - On Ona hosts, secrets from `/etc/profile.d/ona-secrets.sh` are sourced into Zsh
-- On Ona hosts, Ona's Claude integration writes root-owned files into `~vscode/.claude`; [`ona/fix-claude-remote-ownership.sh`](ona/fix-claude-remote-ownership.sh) watches the directory (via `inotifywait`, installed on demand) and hands ownership back to `vscode`
+- On Ona hosts, [`ona/fix-ona-remote-ownership.sh`](ona/fix-ona-remote-ownership.sh) repairs ownership for the paths in its `ownership_paths` array (initially `~vscode/.claude/` recursively), then watches for new or replaced files via `inotifywait`
 
 ## AI
 

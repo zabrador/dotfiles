@@ -4,11 +4,11 @@
 
 ona_dir="$(dirname "$0")"
 
-# --- Claude remote ownership watcher ------------------------------------------
+# --- Ona remote ownership watchers ------------------------------------------
 
-echo "Starting Claude-remote ownership watcher..."
-sh "$ona_dir/fix-claude-remote-ownership.sh"
-echo "...Claude-remote ownership watcher running!"
+echo "Starting Ona remote ownership watchers..."
+bash "$ona_dir/fix-ona-remote-ownership.sh"
+echo "...Ona remote ownership watchers running!"
 
 # --- Claude plugin opt-outs ---------------------------------------------------
 
